@@ -1,0 +1,181 @@
+// =============================================================================
+// Bingo Multiplayer — Shared Types
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Core Domain Types
+// -----------------------------------------------------------------------------
+
+export type GameStatus = 'waiting' | 'playing' | 'ended';
+
+export interface GameState {
+  id: string;
+  status: GameStatus;
+  players: Player[];
+  dispensadorId: string | null;
+  drawnNumbers: number[];
+  lineCalled: boolean;
+  bingoCalled: boolean;
+  createdAt: number;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  cards: Card[];
+  isDispensador: boolean;
+}
+
+export interface Card {
+  numbers: number[]; // 15 numbers total, sorted within each column
+  marked: boolean[];  // 15 booleans corresponding to numbers array
+}
+
+// -----------------------------------------------------------------------------
+// Socket Events: Client → Server
+// -----------------------------------------------------------------------------
+
+export interface CreateGamePayload {
+  playerName: string;
+}
+
+export interface JoinGamePayload {
+  gameId: string;
+  playerName: string;
+  cardCount: number;
+}
+
+export interface DrawNumberPayload {
+  gameId: string;
+  number: number;
+}
+
+export interface ToggleLinePayload {
+  gameId: string;
+}
+
+export interface ToggleBingoPayload {
+  gameId: string;
+}
+
+export interface MarkCardPayload {
+  gameId: string;
+  cardIndex: number;
+  cellIndex: number;
+}
+
+export interface CallLinePayload {
+  gameId: string;
+}
+
+export interface CallBingoPayload {
+  gameId: string;
+}
+
+export interface ClientToServerEvents {
+  createGame: (payload: CreateGamePayload) => void;
+  joinGame: (payload: JoinGamePayload) => void;
+  drawNumber: (payload: DrawNumberPayload) => void;
+  toggleLine: (payload: ToggleLinePayload) => void;
+  toggleBingo: (payload: ToggleBingoPayload) => void;
+  markCard: (payload: MarkCardPayload) => void;
+  callLine: (payload: CallLinePayload) => void;
+  callBingo: (payload: CallBingoPayload) => void;
+}
+
+// -----------------------------------------------------------------------------
+// Socket Events: Server → Client
+// -----------------------------------------------------------------------------
+
+export interface GameCreatedPayload {
+  gameId: string;
+}
+
+export interface GameJoinedPayload {
+  game: GameState;
+  playerId: string;
+  cards: Card[];
+}
+
+export interface PlayerJoinedPayload {
+  playerCount: number;
+}
+
+export interface NumberDrawnPayload {
+  number: number;
+  drawnNumbers: number[];
+}
+
+export interface LineToggledPayload {
+  lineCalled: boolean;
+}
+
+export interface BingoToggledPayload {
+  bingoCalled: boolean;
+}
+
+export interface CardMarkedPayload {
+  cardIndex: number;
+  cellIndex: number;
+}
+
+export interface GameEndedPayload {
+  winner: string;
+  reason: 'line' | 'bingo';
+}
+
+export interface ErrorPayload {
+  code: string;
+  message: string;
+}
+
+export interface ServerToClientEvents {
+  gameCreated: (payload: GameCreatedPayload) => void;
+  gameJoined: (payload: GameJoinedPayload) => void;
+  playerJoined: (payload: PlayerJoinedPayload) => void;
+  numberDrawn: (payload: NumberDrawnPayload) => void;
+  lineToggled: (payload: LineToggledPayload) => void;
+  bingoToggled: (payload: BingoToggledPayload) => void;
+  cardMarked: (payload: CardMarkedPayload) => void;
+  gameEnded: (payload: GameEndedPayload) => void;
+  error: (payload: ErrorPayload) => void;
+}
+
+// -----------------------------------------------------------------------------
+// REST API Types
+// -----------------------------------------------------------------------------
+
+export interface CreateGameRequest {
+  playerName: string;
+}
+
+export interface CreateGameResponse {
+  gameId: string;
+  playerId: string;
+  playerName: string;
+  isDispensador: boolean;
+}
+
+export interface GameStateResponse {
+  id: string;
+  status: GameStatus;
+  playerCount: number;
+  drawnNumbers: number[];
+  lineCalled: boolean;
+  bingoCalled: boolean;
+  createdAt: number;
+}
+
+// -----------------------------------------------------------------------------
+// Error Codes
+// -----------------------------------------------------------------------------
+
+export enum ErrorCode {
+  GAME_NOT_FOUND = 'PARTIDA_NO_ENCONTRADA',
+  GAME_FULL = 'PARTIDA_LLENA',
+  NOT_DISPENSADOR = 'NO_ERES_DISPENSADOR',
+  NUMBER_ALREADY_DRAWN = 'NUMERO_INVALIDO',
+  INVALID_NAME = 'NOMBRE_INVALIDO',
+  GAME_ENDED = 'PARTIDA_TERMINADA',
+  INVALID_CARD_COUNT = 'CANTIDAD_INVALIDA',
+}
