@@ -24,93 +24,128 @@ const DECADE_RANGES: [number, number][] = [
   [80, 90],  // column 8
 ];
 
-export class CardGenerator {
-  /**
-   * Generate a single valid bingo card.
-   * Returns a Card with 15 numbers (sorted within column) and 15 falses for marked.
-   */
-  static generateCard(): Card {
-    // Grid: 9 columns × 3 rows, null means blank
-    const grid: (number | null)[][] = [];
+/** Fisher-Yates shuffle (mutates array in place). */
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/**
+ * Generate a valid 9×3 boolean pattern where:
+ * - 6 columns have 2 numbers, 3 columns have 1 number → 15 total
+ * - Each row has exactly 5 numbers
+ * Uses generate-and-test with constrained initial distribution for fast convergence.
+ */
+function generateValidPattern(): boolean[][] {
+  const rows = [0, 1, 2];
+
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const pattern: boolean[][] = Array.from({ length: 9 }, () => [false, false, false]);
+    // Column sizes: 6×2 + 3×1 = 15
+    const colSizes = shuffle([2, 2, 2, 2, 2, 2, 1, 1, 1]);
+
     for (let col = 0; col < 9; col++) {
-      grid[col] = [null, null, null];
-    }
-
-    const numbersPerColumn: number[] = new Array(9).fill(0);
-    const usedNumbers: Set<number> = new Set();
-
-    // Fill rows one at a time, ensuring exactly 5 numbers per row
-    for (let row = 0; row < 3; row++) {
-      let numbersInRow = 0;
-      let attempts = 0;
-
-      while (numbersInRow < 5 && attempts < 200) {
-        attempts++;
-
-        // Find columns that can still accept numbers (max 3 per column)
-        const eligibleColumns: number[] = [];
-        for (let col = 0; col < 9; col++) {
-          if (numbersPerColumn[col] < 3 && grid[col][row] === null) {
-            eligibleColumns.push(col);
-          }
-        }
-
-        if (eligibleColumns.length === 0) break;
-
-        // Pick a random eligible column
-        const col =
-          eligibleColumns[Math.floor(Math.random() * eligibleColumns.length)];
-        const [rangeStart, rangeEnd] = DECADE_RANGES[col];
-
-        // Find available numbers in this column's range
-        const availableNumbers: number[] = [];
-        for (let n = rangeStart; n <= rangeEnd; n++) {
-          if (!usedNumbers.has(n)) {
-            availableNumbers.push(n);
-          }
-        }
-
-        if (availableNumbers.length === 0) continue;
-
-        // Pick a random available number
-        const number =
-          availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
-        grid[col][row] = number;
-        usedNumbers.add(number);
-        numbersPerColumn[col]++;
-        numbersInRow++;
+      const picked = shuffle([...rows]).slice(0, colSizes[col]);
+      for (const r of picked) {
+        pattern[col][r] = true;
       }
     }
 
-    // Validate: ensure we got exactly 15 numbers total
-    const totalNumbers = numbersPerColumn.reduce((a, b) => a + b, 0);
-    if (totalNumbers !== 15) {
-      // Retry — rare edge case
-      return CardGenerator.generateCard();
+    // Verify row sums
+    const rowSums = [0, 0, 0];
+    for (let c = 0; c < 9; c++) {
+      for (let r = 0; r < 3; r++) {
+        if (pattern[c][r]) rowSums[r]++;
+      }
+    }
+    if (rowSums[0] === 5 && rowSums[1] === 5 && rowSums[2] === 5) {
+      return pattern;
+    }
+  }
+
+  // Fallback: deterministic valid pattern (guaranteed to work)
+  // Columns: 0-5 have size 2, 6-8 have size 1. Row distribution balanced.
+  const fallback: boolean[][] = [
+    [true, true, false],   // col 0
+    [true, false, true],   // col 1
+    [false, true, true],   // col 2
+    [true, true, false],   // col 3
+    [true, false, true],   // col 4
+    [false, true, true],   // col 5
+    [true, false, false],  // col 6
+    [false, true, false],  // col 7
+    [false, false, true],  // col 8
+  ];
+  return fallback;
+}
+
+export class CardGenerator {
+  /**
+   * Generate a single valid bingo card.
+   *
+   * Algorithm (correct by construction):
+   * 1. Generate a valid 9×3 boolean pattern (which cells have numbers)
+   * 2. Fill each column with random numbers from its decade range (no duplicates within card)
+   * 3. Sort numbers ascending within each column, place at pattern rows
+   *
+   * Returns a Card with 15 numbers (sorted within column) and all marked = false.
+   */
+  static generateCard(): Card {
+    const pattern = generateValidPattern();
+
+    // Fill numbers per column from its decade range
+    const grid: (number | null)[][] = Array.from({ length: 9 }, () => [null, null, null]);
+    const usedNumbers = new Set<number>();
+
+    for (let col = 0; col < 9; col++) {
+      const [low, high] = DECADE_RANGES[col];
+
+      // Collect available numbers in this column's decade range
+      const available: number[] = [];
+      for (let n = low; n <= high; n++) {
+        if (!usedNumbers.has(n)) {
+          available.push(n);
+        }
+      }
+      shuffle(available);
+
+      // Assign numbers to filled rows (sorted ascending later)
+      let numIdx = 0;
+      for (let row = 0; row < 3; row++) {
+        if (pattern[col][row]) {
+          grid[col][row] = available[numIdx++];
+          usedNumbers.add(available[numIdx - 1]);
+        }
+      }
     }
 
-    // Build position-based cells array: 27 elements (9 cols × 3 rows)
+    // Build cells array: 27 elements (9 cols × 3 rows)
     // Index = col * 3 + row, 0 = blank cell
-    // Numbers are sorted ascending within their column, placed at their row position
     const cells: number[] = new Array(27).fill(0);
     const marked: boolean[] = new Array(27).fill(false);
 
     for (let col = 0; col < 9; col++) {
-      // Collect numbers in this column with their original row positions
-      const columnEntries: { row: number; value: number }[] = [];
+      // Collect numbers with their row positions
+      const entries: { row: number; value: number }[] = [];
       for (let row = 0; row < 3; row++) {
         if (grid[col][row] !== null) {
-          columnEntries.push({ row, value: grid[col][row]! });
+          entries.push({ row, value: grid[col][row]! });
         }
       }
 
       // Sort by value (ascending within column)
-      columnEntries.sort((a, b) => a.value - b.value);
+      entries.sort((a, b) => a.value - b.value);
 
-      // Place back at their row position
-      for (const entry of columnEntries) {
-        const idx = col * 3 + entry.row;
-        cells[idx] = entry.value;
+      // Place sorted values at pattern rows in ascending row order
+      let entryIdx = 0;
+      for (let row = 0; row < 3; row++) {
+        if (pattern[col][row]) {
+          cells[col * 3 + row] = entries[entryIdx].value;
+          entryIdx++;
+        }
       }
     }
 
