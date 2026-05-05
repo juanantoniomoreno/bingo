@@ -1,4 +1,7 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
+
+// Generate only lowercase alphanumeric IDs (no underscores, no hyphens)
+const generateGameId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 import { GameRoom } from './GameRoom';
 import { CardGenerator } from './CardGenerator';
 import type {
@@ -27,7 +30,7 @@ export class GameManager {
    * Create a new game. The creator becomes the dispensador.
    */
   createGame(playerName: string): CreateGameResponse {
-    const gameId = nanoid(6);
+    const gameId = generateGameId();
     const room = new GameRoom(gameId);
 
     // Generate 1 card for dispensador (they can watch, but still get a card)

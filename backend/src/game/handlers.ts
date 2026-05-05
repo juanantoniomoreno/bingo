@@ -32,7 +32,7 @@ function isValidName(name: string): boolean {
  * Validate game ID: exactly 6 alphanumeric chars
  */
 function isValidGameId(gameId: string): boolean {
-  return /^[a-zA-Z0-9]{6}$/.test(gameId);
+  return /^[a-z0-9]{6}$/.test(gameId);
 }
 
 /**
