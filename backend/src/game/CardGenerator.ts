@@ -89,32 +89,11 @@ export class CardGenerator {
       return CardGenerator.generateCard();
     }
 
-    // Flatten grid into numbers array (column-major order, nulls become 0)
-    const numbers: number[] = [];
-    for (let col = 0; col < 9; col++) {
-      // Collect the numbers in this column, sort them ascending
-      const colNumbers: number[] = [];
-      for (let row = 0; row < 3; row++) {
-        if (grid[col][row] !== null) {
-          colNumbers.push(grid[col][row]!);
-        }
-      }
-      colNumbers.sort((a, b) => a - b);
-
-      // Place sorted numbers from top, fill rest with 0s
-      let numIdx = 0;
-      for (let row = 0; row < 3; row++) {
-        if (grid[col][row] !== null) {
-          // Push in column order: all col 0 rows, then col 1 rows, etc.
-          // But we need to preserve position information for the UI
-        }
-      }
-    }
-
-    // Re-flatten properly: position-based array of 27 cells (9 cols × 3 rows)
-    // Each cell is either a number or 0 (blank)
-    // Index = col * 3 + row
+    // Build position-based cells array: 27 elements (9 cols × 3 rows)
+    // Index = col * 3 + row, 0 = blank cell
+    // Numbers are sorted ascending within their column, placed at their row position
     const cells: number[] = new Array(27).fill(0);
+    const marked: boolean[] = new Array(27).fill(false);
 
     for (let col = 0; col < 9; col++) {
       // Collect numbers in this column with their original row positions
@@ -128,56 +107,41 @@ export class CardGenerator {
       // Sort by value (ascending within column)
       columnEntries.sort((a, b) => a.value - b.value);
 
-      // Place back, trying to preserve original row position
-      // but ensuring ascending order within column
+      // Place back at their row position
       for (const entry of columnEntries) {
         const idx = col * 3 + entry.row;
         cells[idx] = entry.value;
       }
     }
 
-    // Now flatten to 15-number array (only non-zero cells), preserving column order
-    const finalNumbers: number[] = [];
-    const finalMarked: boolean[] = [];
-
-    for (let col = 0; col < 9; col++) {
-      let count = 0;
-      for (let row = 0; row < 3; row++) {
-        const idx = col * 3 + row;
-        if (cells[idx] !== 0) {
-          finalNumbers.push(cells[idx]);
-          finalMarked.push(false);
-          count++;
-        }
-      }
-    }
-
-    return {
-      numbers: finalNumbers,
-      marked: finalMarked,
-    };
+    return { numbers: cells, marked };
   }
 
   /**
    * Validate a card matches all the bingo card rules.
    */
   static validateCard(card: Card): boolean {
-    if (card.numbers.length !== 15) return false;
-    if (card.marked.length !== 15) return false;
+    if (card.numbers.length !== 27) return false;
+    if (card.marked.length !== 27) return false;
+
+    // Collect non-blank numbers
+    const actualNumbers = card.numbers.filter((n) => n > 0);
+    if (actualNumbers.length !== 15) return false;
 
     // Check all numbers are in valid range
-    for (const n of card.numbers) {
+    for (const n of actualNumbers) {
       if (n < 1 || n > 90) return false;
     }
 
     // Check no duplicates
-    const uniqueNumbers = new Set(card.numbers);
+    const uniqueNumbers = new Set(actualNumbers);
     if (uniqueNumbers.size !== 15) return false;
 
     // Check each number is in the correct decade column
-    for (const n of card.numbers) {
-      const col = n === 90 ? 8 : Math.floor(n / 10);
-      // Verify the number belongs to its column's decade range
+    for (let idx = 0; idx < 27; idx++) {
+      const n = card.numbers[idx];
+      if (n === 0) continue;
+      const col = Math.floor(idx / 3);
       const [rangeStart, rangeEnd] = DECADE_RANGES[col];
       if (n < rangeStart || n > rangeEnd) return false;
     }

@@ -27,8 +27,8 @@ export interface Player {
 }
 
 export interface Card {
-  numbers: number[]; // 15 numbers total, sorted within each column
-  marked: boolean[];  // 15 booleans corresponding to numbers array
+  numbers: number[]; // 27 elements (9 cols × 3 rows), index = col*3 + row, 0 = blank cell
+  marked: boolean[];  // 27 booleans, one per cell, true = marked/tachado
 }
 
 // -----------------------------------------------------------------------------

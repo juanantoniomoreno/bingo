@@ -273,7 +273,7 @@ export function registerHandlers(
       if (
         payload.cardIndex < 0 ||
         payload.cellIndex < 0 ||
-        payload.cellIndex >= 15
+        payload.cellIndex >= 27
       ) {
         socket.emit('error', {
           code: ErrorCode.GAME_NOT_FOUND, // Reusing error code for invalid input
