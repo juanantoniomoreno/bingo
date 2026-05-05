@@ -44,7 +44,7 @@ export function BingoBoard({
                     aspect-square flex items-center justify-center
                     text-xs sm:text-sm font-semibold rounded-lg
                     transition-all duration-150 active:scale-95
-                    min-w-[32px] min-h-[32px] sm:min-w-[40px] sm:min-h-[40px]
+                    min-w-[38px] min-h-[38px] sm:min-w-[44px] sm:min-h-[44px]
                     touch-manipulation
                     ${
                       drawn

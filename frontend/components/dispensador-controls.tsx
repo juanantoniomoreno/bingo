@@ -16,7 +16,7 @@ export function DispensadorControls({
   disabled,
 }: DispensadorControlsProps) {
   return (
-    <div className="flex gap-3 sm:gap-4 justify-center">
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
       <button
         onClick={onToggleLine}
         disabled={disabled}
