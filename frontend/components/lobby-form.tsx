@@ -67,12 +67,13 @@ export function LobbyForm() {
     setError('');
     setLoading(true);
 
-    const cleanupJoined = onEvent('gameJoined', ({ game, playerId }) => {
+    const cleanupJoined = onEvent('gameJoined', ({ game, playerId, cards }) => {
       cleanupJoined();
       cleanupError();
       sessionStorage.setItem('bingo_role', 'player');
       sessionStorage.setItem('bingo_gameId', game.id);
       sessionStorage.setItem('bingo_playerId', playerId);
+      sessionStorage.setItem('bingo_cards', JSON.stringify(cards));
       sessionStorage.setItem('bingo_drawnNumbers', JSON.stringify(game.drawnNumbers));
       sessionStorage.setItem('bingo_lineCalled', JSON.stringify(game.lineCalled));
       sessionStorage.setItem('bingo_bingoCalled', JSON.stringify(game.bingoCalled));

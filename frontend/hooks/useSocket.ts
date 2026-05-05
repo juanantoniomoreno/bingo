@@ -10,6 +10,8 @@ import type {
 export function useSocket() {
   const socketRef = useRef(getSocket());
   const [connected, setConnected] = useState(socketRef.current.connected);
+  const [reconnecting, setReconnecting] = useState(false);
+  const wasConnectedRef = useRef(false);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -18,19 +20,45 @@ export function useSocket() {
       socket.connect();
     }
 
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
+    const onConnect = () => {
+      const was = wasConnectedRef.current;
+      wasConnectedRef.current = true;
+      setConnected(true);
+      setReconnecting(false);
+      // Emit a custom event for the page to know about reconnect
+      if (was) {
+        socket.emit('_internal:reconnected');
+      }
+    };
+
+    const onDisconnect = () => {
+      setConnected(false);
+    };
+
+    const onReconnectAttempt = () => {
+      setReconnecting(true);
+    };
+
+    const onReconnectFailed = () => {
+      setReconnecting(false);
+      setConnected(false);
+    };
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.on('reconnect_attempt', onReconnectAttempt);
+    socket.on('reconnect_failed', onReconnectFailed);
 
     if (socket.connected) {
+      wasConnectedRef.current = true;
       setConnected(true);
     }
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('reconnect_attempt', onReconnectAttempt);
+      socket.off('reconnect_failed', onReconnectFailed);
     };
   }, []);
 
@@ -60,6 +88,7 @@ export function useSocket() {
   return {
     socket: socketRef.current,
     connected,
+    reconnecting,
     emit,
     onEvent,
   };
