@@ -73,7 +73,7 @@ export function BingoCard({
                     number === 0
                       ? 'bg-gray-50/50 cursor-default cell-empty'
                       : marked
-                        ? 'cursor-default'
+                        ? 'bg-white cursor-default'
                         : drawn
                           ? 'bg-white cursor-pointer hover:brightness-110 active:brightness-90'
                           : 'bg-white cursor-default'
