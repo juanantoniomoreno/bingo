@@ -1,7 +1,12 @@
 'use client';
 
 import type { Card as CardType } from '@/types';
-import { getCardColorClass, getCardBgClass } from '@/lib/card-color';
+import {
+  getCardColorClass,
+  getCardBorderClass,
+  getCardBgClass,
+  getCardGridBgClass,
+} from '@/lib/card-color';
 
 interface CardProps {
   card: CardType;
@@ -11,10 +16,6 @@ interface CardProps {
   disabled?: boolean;
 }
 
-/**
- * Converts (col, row) to the flat cellIndex used in the Card arrays.
- * numbers[15] and marked[15] are stored column-major: for col 0→8, for row 0→2.
- */
 function getCellIndex(col: number, row: number): number {
   return col * 3 + row;
 }
@@ -35,19 +36,19 @@ export function BingoCard({
   };
 
   const numberColor = getCardColorClass(cardIndex);
+  const borderColor = getCardBorderClass(cardIndex);
   const markedBg = getCardBgClass(cardIndex);
+  const gridBg = getCardGridBgClass(cardIndex);
 
   return (
-    <div className="bg-white border-2 border-wood-dark/20 rounded-xl shadow-md overflow-hidden w-full min-w-[360px]">
-      {/* Card header */}
-      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-wood-medium border-b border-wood-dark/20">
-        <span className="text-xs font-semibold text-wood-dark uppercase tracking-wide">
-          Cartón {cardIndex + 1}
-        </span>
-      </div>
+    <div className={`relative bg-white border-2 ${borderColor} rounded-xl shadow-md overflow-hidden w-full min-w-[360px]`}>
+      {/* Corner label */}
+      <span className={`absolute top-1.5 left-2 ${numberColor} text-[10px] font-bold opacity-60 z-10 select-none`}>
+        C{cardIndex + 1}
+      </span>
 
       {/* 9-column grid body */}
-      <div className="grid grid-cols-9 gap-px bg-wood-dark/10 p-px">
+      <div className={`grid grid-cols-9 gap-px ${gridBg} pt-5 pb-1 px-1`}>
         {Array.from({ length: 3 }, (_, row) =>
           Array.from({ length: 9 }, (_, col) => {
             const cellIndex = getCellIndex(col, row);
@@ -63,18 +64,18 @@ export function BingoCard({
                 disabled={!clickable}
                 className={`
                   aspect-square flex items-center justify-center
-                  text-lg sm:text-xl font-bold
+                  text-xl sm:text-3xl font-extrabold
                   transition-all duration-150
-                  min-w-[38px] min-h-[38px] sm:min-w-[44px] sm:min-h-[44px]
+                  min-w-[38px] min-h-[38px] sm:min-w-[48px] sm:min-h-[48px]
                   touch-manipulation
                   ${
                     number === 0
-                      ? 'bg-gray-50 cursor-default cell-empty'
+                      ? 'bg-gray-50/50 cursor-default cell-empty'
                       : marked
                         ? `${numberColor} ${markedBg} cursor-default shadow-inner`
                         : drawn
-                          ? `${numberColor} bg-amber-50/50 cursor-pointer hover:bg-amber-100 active:bg-amber-200 border border-amber-400`
-                          : `${numberColor} bg-white cursor-default border border-gray-100`
+                          ? `${numberColor} bg-white/80 cursor-pointer hover:brightness-110 active:brightness-90 border ${borderColor}/40`
+                          : `${numberColor} bg-white cursor-default`
                   }
                 `}
                 aria-label={

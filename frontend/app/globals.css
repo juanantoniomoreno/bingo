@@ -81,20 +81,18 @@
   justify-content: center;
 }
 
-/* ── Cell decor: empty-card-cell decorative pattern ── */
+/* ── Cell decor: empty-card-cell decorative inner square ── */
 .cell-empty {
   position: relative;
 }
 .cell-empty::before {
-  content: '+';
+  content: '';
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  color: rgb(209 213 219);
-  opacity: 0.4;
+  inset: 30%;
+  display: block;
+  background: rgb(180 160 130);
+  opacity: 0.3;
+  border-radius: 3px;
 }
 
 /* ── Metal button: embossed metallic base style ── */
