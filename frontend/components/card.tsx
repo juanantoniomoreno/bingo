@@ -1,12 +1,7 @@
 'use client';
 
 import type { Card as CardType } from '@/types';
-import {
-  getCardColorClass,
-  getCardBorderClass,
-  getCardBgClass,
-  getCardGridBgClass,
-} from '@/lib/card-color';
+import { getCardColors } from '@/lib/card-color';
 
 interface CardProps {
   card: CardType;
@@ -35,20 +30,26 @@ export function BingoCard({
     return num > 0 && isDrawn(num) && !card.marked[cellIndex];
   };
 
-  const numberColor = getCardColorClass(cardIndex);
-  const borderColor = getCardBorderClass(cardIndex);
-  const markedBg = getCardBgClass(cardIndex);
-  const gridBg = getCardGridBgClass(cardIndex);
+  const colors = getCardColors(cardIndex);
 
   return (
-    <div className={`relative bg-white border-2 ${borderColor} rounded-xl shadow-md overflow-hidden w-full min-w-[360px]`}>
+    <div
+      className="relative bg-white border-2 rounded-xl shadow-md overflow-hidden w-full min-w-[360px]"
+      style={{ borderColor: colors.border }}
+    >
       {/* Corner label */}
-      <span className={`absolute top-1.5 left-2 ${numberColor} text-[10px] font-bold opacity-60 z-10 select-none`}>
+      <span
+        className="absolute top-1.5 left-2 text-[10px] font-bold opacity-60 z-10 select-none"
+        style={{ color: colors.text }}
+      >
         C{cardIndex + 1}
       </span>
 
       {/* 9-column grid body */}
-      <div className={`grid grid-cols-9 gap-px ${gridBg} pt-5 pb-1 px-1`}>
+      <div
+        className="grid grid-cols-9 gap-px pt-5 pb-1 px-1"
+        style={{ backgroundColor: colors.gridBg }}
+      >
         {Array.from({ length: 3 }, (_, row) =>
           Array.from({ length: 9 }, (_, col) => {
             const cellIndex = getCellIndex(col, row);
@@ -72,12 +73,24 @@ export function BingoCard({
                     number === 0
                       ? 'bg-gray-50/50 cursor-default cell-empty'
                       : marked
-                        ? `${numberColor} ${markedBg} cursor-default shadow-inner`
+                        ? 'cursor-default shadow-inner'
                         : drawn
-                          ? `${numberColor} bg-white/80 cursor-pointer hover:brightness-110 active:brightness-90 border ${borderColor}/40`
-                          : `${numberColor} bg-white cursor-default`
+                          ? 'bg-white/80 cursor-pointer hover:brightness-110 active:brightness-90'
+                          : 'bg-white cursor-default'
                   }
                 `}
+                style={
+                  number === 0
+                    ? undefined
+                    : marked
+                      ? { color: colors.text, backgroundColor: colors.markedBg }
+                      : drawn
+                        ? {
+                            color: colors.text,
+                            border: `1px solid ${colors.border}66`,
+                          }
+                        : { color: colors.text }
+                }
                 aria-label={
                   number > 0
                     ? `Número ${number}${marked ? ' (marcado)' : ''}`

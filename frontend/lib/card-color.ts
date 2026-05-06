@@ -6,62 +6,52 @@
  * This guarantees SSR / hydration consistency (no flash / no mismatch).
  */
 
-const CARD_COLORS = [
-  'ball-red',
-  'ball-blue',
-  'ball-green',
-  'ball-yellow',
-  'ball-orange',
-] as const;
-
-const CARD_TEXT_CLASSES = [
-  'text-ball-red',
-  'text-ball-blue',
-  'text-ball-green',
-  'text-ball-yellow',
-  'text-ball-orange',
-] as const;
-
-const CARD_BORDER_CLASSES = [
-  'border-ball-red',
-  'border-ball-blue',
-  'border-ball-green',
-  'border-ball-yellow',
-  'border-ball-orange',
-] as const;
-
-const CARD_BG_CLASSES = [
-  'bg-ball-red/30',
-  'bg-ball-blue/30',
-  'bg-ball-green/30',
-  'bg-ball-yellow/30',
-  'bg-ball-orange/30',
-] as const;
-
-const CARD_GRID_BG_CLASSES = [
-  'bg-ball-red/15',
-  'bg-ball-blue/15',
-  'bg-ball-green/15',
-  'bg-ball-yellow/15',
-  'bg-ball-orange/15',
-] as const;
-
-export function getCardColorKey(cardIndex: number): string {
-  return CARD_COLORS[cardIndex % 5];
+interface CardColorSet {
+  name: string;
+  text: string;
+  border: string;
+  markedBg: string;
+  gridBg: string;
 }
 
-export function getCardColorClass(cardIndex: number): string {
-  return CARD_TEXT_CLASSES[cardIndex % 5];
-}
+const CARD_COLOR_SETS: CardColorSet[] = [
+  {
+    name: 'red',
+    text: '#dc2626',
+    border: '#dc2626',
+    markedBg: 'rgba(220, 38, 38, 0.3)',
+    gridBg: 'rgba(220, 38, 38, 0.2)',
+  },
+  {
+    name: 'blue',
+    text: '#2563eb',
+    border: '#2563eb',
+    markedBg: 'rgba(37, 99, 235, 0.3)',
+    gridBg: 'rgba(37, 99, 235, 0.2)',
+  },
+  {
+    name: 'green',
+    text: '#15803d',
+    border: '#15803d',
+    markedBg: 'rgba(21, 128, 61, 0.3)',
+    gridBg: 'rgba(21, 128, 61, 0.2)',
+  },
+  {
+    name: 'yellow',
+    text: '#b45309',
+    border: '#b45309',
+    markedBg: 'rgba(180, 83, 9, 0.3)',
+    gridBg: 'rgba(180, 83, 9, 0.2)',
+  },
+  {
+    name: 'orange',
+    text: '#c2410c',
+    border: '#c2410c',
+    markedBg: 'rgba(194, 65, 12, 0.3)',
+    gridBg: 'rgba(194, 65, 12, 0.2)',
+  },
+];
 
-export function getCardBorderClass(cardIndex: number): string {
-  return CARD_BORDER_CLASSES[cardIndex % 5];
-}
-
-export function getCardBgClass(cardIndex: number): string {
-  return CARD_BG_CLASSES[cardIndex % 5];
-}
-
-export function getCardGridBgClass(cardIndex: number): string {
-  return CARD_GRID_BG_CLASSES[cardIndex % 5];
+export function getCardColors(cardIndex: number): CardColorSet {
+  return CARD_COLOR_SETS[cardIndex % CARD_COLOR_SETS.length];
 }
