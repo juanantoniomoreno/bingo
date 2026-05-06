@@ -86,10 +86,10 @@ export class GameRoom {
   }
 
   /**
-   * Get all drawn numbers sorted
+   * Get all drawn numbers in insertion order
    */
   getDrawnNumbers(): number[] {
-    return Array.from(this.drawnNumbers).sort((a, b) => a - b);
+    return Array.from(this.drawnNumbers);
   }
 
   /**
