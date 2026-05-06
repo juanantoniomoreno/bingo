@@ -22,11 +22,11 @@ export function DispensadorControls({
         disabled={disabled}
         className={`
           flex-1 max-w-[160px] py-3 px-4 sm:py-4 sm:px-6 rounded-xl font-bold text-sm sm:text-base
-          transition-all duration-200 active:scale-95
+          transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-metal-dark
           ${
             lineCalled
-              ? 'bg-amber-500 text-white shadow-lg ring-2 ring-amber-300'
-              : 'bg-white text-amber-700 border-2 border-amber-500 hover:bg-amber-50'
+              ? 'bg-metal-mid text-white shadow-inner'
+              : 'bg-metal-light text-metal-dark border border-metal-mid shadow-[0_2px_0_#71717A] hover:bg-metal-mid/20'
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
@@ -39,11 +39,11 @@ export function DispensadorControls({
         disabled={disabled}
         className={`
           flex-1 max-w-[160px] py-3 px-4 sm:py-4 sm:px-6 rounded-xl font-bold text-sm sm:text-base
-          transition-all duration-200 active:scale-95
+          transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-metal-dark
           ${
             bingoCalled
-              ? 'bg-red-600 text-white shadow-lg ring-2 ring-red-300'
-              : 'bg-white text-red-700 border-2 border-red-500 hover:bg-red-50'
+              ? 'bg-metal-mid text-white shadow-inner'
+              : 'bg-metal-light text-metal-dark border border-metal-mid shadow-[0_2px_0_#71717A] hover:bg-metal-mid/20'
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}

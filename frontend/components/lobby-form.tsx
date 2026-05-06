@@ -108,7 +108,7 @@ export function LobbyForm() {
   return (
     <div className="w-full max-w-sm mx-auto">
       {/* Mode toggle */}
-      <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+      <div className="flex rounded-lg bg-wood-medium/30 p-1 mb-6">
         <button
           type="button"
           onClick={() => {
@@ -117,7 +117,7 @@ export function LobbyForm() {
           }}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             mode === 'crear'
-              ? 'bg-white text-primary-700 shadow-sm'
+              ? 'bg-wood-light text-wood-dark shadow-sm'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -131,7 +131,7 @@ export function LobbyForm() {
           }}
           className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             mode === 'unirse'
-              ? 'bg-white text-primary-700 shadow-sm'
+              ? 'bg-wood-light text-wood-dark shadow-sm'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -162,7 +162,7 @@ export function LobbyForm() {
                 onChange={(e) => setGameId(e.target.value.toUpperCase())}
                 placeholder="ABC123"
                 maxLength={6}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-center text-lg font-mono tracking-widest uppercase transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-wood-dark focus:border-wood-dark outline-none text-center text-lg font-mono tracking-widest uppercase transition-all"
               />
             </div>
             <div>
@@ -176,7 +176,7 @@ export function LobbyForm() {
                 id="cardCount"
                 value={cardCount}
                 onChange={(e) => setCardCount(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-wood-dark focus:border-wood-dark outline-none bg-white transition-all"
               >
                 {[1, 2, 3, 4, 5].map((n) => (
                   <option key={n} value={n}>
@@ -202,7 +202,7 @@ export function LobbyForm() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Juan"
             maxLength={20}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-wood-dark focus:border-wood-dark outline-none transition-all"
           />
         </div>
 
@@ -215,7 +215,7 @@ export function LobbyForm() {
         <button
           type="submit"
           disabled={loading || !connected}
-          className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          className="w-full py-3 px-4 bg-wood-medium hover:bg-wood-dark disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-wood-dark focus:ring-offset-2"
         >
           {loading
             ? 'Cargando...'

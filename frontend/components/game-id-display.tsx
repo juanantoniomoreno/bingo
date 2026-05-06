@@ -20,15 +20,15 @@ export function GameIdDisplay({ gameId }: GameIdDisplayProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 text-center">
-      <p className="text-sm text-gray-500 mb-2">Código de Partida</p>
+    <div className="bg-metal-light border border-metal-mid rounded-lg shadow-md p-4 sm:p-6 text-center">
+      <p className="text-sm text-metal-dark/70 mb-2">Código de Partida</p>
       <div className="flex items-center justify-center gap-3">
-        <span className="text-2xl sm:text-3xl font-bold font-mono tracking-widest text-gray-900">
+        <span className="text-2xl sm:text-3xl font-bold font-mono tracking-widest text-metal-dark">
           {gameId.toUpperCase()}
         </span>
         <button
           onClick={handleCopy}
-          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors focus:ring-2 focus:ring-primary-500"
+          className="p-2 rounded-lg bg-metal-mid/20 hover:bg-metal-mid/40 text-metal-dark transition-colors focus-visible:ring-2 focus-visible:ring-metal-dark"
           title="Copiar código"
           aria-label="Copiar código de partida"
         >

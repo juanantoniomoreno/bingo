@@ -416,7 +416,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
           <p className="text-red-600 mb-4">{error}</p>
           <a
             href="/"
-            className="text-primary-600 hover:underline font-medium"
+            className="text-wood-dark hover:underline font-medium"
           >
             Volver al inicio
           </a>
@@ -429,7 +429,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
   // Main layout
   // -------------------------------------------------------------------------
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-wood-light">
       <div className="max-w-3xl mx-auto px-3 py-4 sm:px-4 sm:py-6 space-y-4">
         {/* Header with connection + exit */}
         <div className="flex items-center justify-between">
@@ -502,8 +502,8 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
         {/* Number display */}
         {gameState && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
-            <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">
+          <div className="bg-wood-texture border border-wood-dark rounded-xl p-3 sm:p-4">
+            <p className="text-xs text-wood-dark/70 mb-2 uppercase tracking-wide font-medium">
               Últimos números
             </p>
             <NumberDisplay drawnNumbers={gameState.drawnNumbers} />
@@ -532,11 +532,11 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
         {role === 'player' && gameState && (
           <>
             {cards.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-                <p className="text-gray-600 mb-2">
+              <div className="bg-wood-texture border border-wood-dark rounded-xl p-8 text-center">
+                <p className="text-wood-dark mb-2">
                   No se encontraron cartones asignados.
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-wood-dark/70">
                   Asegurate de haber seleccionado la cantidad de cartones al
                   unirte.
                 </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import type { Card as CardType } from '@/types';
+import { getCardColorClass, getCardBgClass } from '@/lib/card-color';
 
 interface CardProps {
   card: CardType;
@@ -33,17 +34,20 @@ export function BingoCard({
     return num > 0 && isDrawn(num) && !card.marked[cellIndex];
   };
 
+  const numberColor = getCardColorClass(cardIndex);
+  const markedBg = getCardBgClass(cardIndex);
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden w-full min-w-[360px]">
+    <div className="bg-white border-2 border-wood-dark/20 rounded-xl shadow-md overflow-hidden w-full min-w-[360px]">
       {/* Card header */}
-      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-gray-50 border-b border-gray-200">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-wood-medium border-b border-wood-dark/20">
+        <span className="text-xs font-semibold text-wood-dark uppercase tracking-wide">
           Cartón {cardIndex + 1}
         </span>
       </div>
 
       {/* 9-column grid body */}
-      <div className="grid grid-cols-9 gap-px bg-gray-200 p-px">
+      <div className="grid grid-cols-9 gap-px bg-wood-dark/10 p-px">
         {Array.from({ length: 3 }, (_, row) =>
           Array.from({ length: 9 }, (_, col) => {
             const cellIndex = getCellIndex(col, row);
@@ -59,18 +63,18 @@ export function BingoCard({
                 disabled={!clickable}
                 className={`
                   aspect-square flex items-center justify-center
-                  text-[11px] sm:text-xs font-bold
+                  text-lg sm:text-xl font-bold
                   transition-all duration-150
                   min-w-[38px] min-h-[38px] sm:min-w-[44px] sm:min-h-[44px]
                   touch-manipulation
                   ${
                     number === 0
-                      ? 'bg-gray-50 cursor-default'
+                      ? 'bg-gray-50 cursor-default cell-empty'
                       : marked
-                        ? 'bg-primary-500 text-white cursor-default shadow-inner'
+                        ? `${numberColor} ${markedBg} cursor-default shadow-inner`
                         : drawn
-                          ? 'bg-amber-50 text-amber-800 cursor-pointer hover:bg-amber-100 active:bg-amber-200 border border-amber-400'
-                          : 'bg-white text-gray-600 cursor-default border border-gray-100'
+                          ? `${numberColor} bg-amber-50/50 cursor-pointer hover:bg-amber-100 active:bg-amber-200 border border-amber-400`
+                          : `${numberColor} bg-white cursor-default border border-gray-100`
                   }
                 `}
                 aria-label={

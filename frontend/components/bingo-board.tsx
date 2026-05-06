@@ -29,7 +29,7 @@ export function BingoBoard({
   return (
     <div className="w-full overflow-x-auto">
       <div className="inline-block min-w-full">
-        <div className="grid grid-cols-9 gap-1 sm:gap-1.5 p-2 sm:p-3 bg-gray-50 rounded-xl">
+        <div className="grid grid-cols-9 gap-1 sm:gap-1.5 p-2 sm:p-3 bg-wood-texture rounded-xl border border-wood-dark">
           {Array.from({ length: rows }, (_, rowIndex) =>
             Array.from({ length: cols }, (_, colIndex) => {
               const number = rowIndex * 9 + colIndex + 1;
@@ -48,8 +48,8 @@ export function BingoBoard({
                     touch-manipulation
                     ${
                       drawn
-                        ? 'bg-primary-500 text-white shadow-md'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-wood-medium shadow-inner text-wood-dark'
+                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]'
                     }
                     ${disabled || drawn ? 'cursor-not-allowed' : 'cursor-pointer'}
                   `}

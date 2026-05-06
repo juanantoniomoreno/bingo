@@ -28,12 +28,123 @@
   }
 }
 
+@keyframes ball-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-alert-pop {
   animation: alert-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .animate-toast {
   animation: toast-slide-down 0.25s ease-out forwards;
+}
+
+.animate-ball-pop {
+  animation: ball-pop 0.3s ease-out forwards;
+}
+
+/* ── Wood texture: layered linear-gradient simulating wood grain ── */
+.bg-wood-texture {
+  background:
+    linear-gradient(135deg, rgb(210 180 140 / 0.6) 0%, rgb(196 168 130 / 0.5) 25%, rgb(210 180 140 / 0.7) 50%, rgb(196 168 130 / 0.5) 75%, rgb(210 180 140 / 0.6) 100%);
+}
+
+/* ── Inset slot: recessed surface via inset box-shadow ── */
+.inset-slot {
+  box-shadow:
+    inset 0 2px 6px rgb(0 0 0 / 0.25),
+    inset 0 -1px 3px rgb(0 0 0 / 0.1);
+}
+
+/* ── Bingo ball sphere: radial-gradient + drop-shadow ── */
+.bingo-ball {
+  background: radial-gradient(circle at 40% 35%, #ffffff 0%, #e5c89c 20%, #c4a882 60%, #8b6914 100%);
+  box-shadow:
+    0 3px 8px rgb(0 0 0 / 0.25),
+    0 1px 2px rgb(0 0 0 / 0.15),
+    inset 0 -2px 3px rgb(0 0 0 / 0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Cell decor: empty-card-cell decorative pattern ── */
+.cell-empty {
+  position: relative;
+}
+.cell-empty::before {
+  content: '+';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: rgb(209 213 219);
+  opacity: 0.4;
+}
+
+/* ── Metal button: embossed metallic base style ── */
+.metal-button {
+  background-color: rgb(212 212 216);
+  border: 1px solid rgb(161 161 170);
+  color: rgb(113 113 122);
+  box-shadow: 0 2px 0 rgb(113 113 122);
+}
+.metal-button:active {
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.2);
+  transform: scale(0.95);
+}
+
+/* ── Card number color classes (deterministic by index 0..4) ── */
+.card-number-color-red {
+  color: rgb(220 38 38);
+}
+.card-number-color-blue {
+  color: rgb(37 99 235);
+}
+.card-number-color-green {
+  color: rgb(22 163 74);
+}
+.card-number-color-yellow {
+  color: rgb(234 179 8);
+}
+.card-number-color-orange {
+  color: rgb(234 88 12);
+}
+
+/* ── Tap highlight suppression ── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Reduced motion: respect user preference ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ball-pop,
+  .animate-alert-pop,
+  .animate-toast {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Prevent horizontal overflow on mobile */
