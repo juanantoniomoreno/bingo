@@ -64,7 +64,7 @@ export function BingoCard({
                 onClick={() => clickable && onMark(cardIndex, cellIndex)}
                 disabled={!clickable}
                 className={`
-                  aspect-square flex items-center justify-center
+                  relative aspect-square flex items-center justify-center
                   text-xl sm:text-3xl font-extrabold
                   transition-all duration-150
                   min-w-[38px] min-h-[38px] sm:min-w-[48px] sm:min-h-[48px]
@@ -73,9 +73,9 @@ export function BingoCard({
                     number === 0
                       ? 'bg-gray-50/50 cursor-default cell-empty'
                       : marked
-                        ? 'cursor-default shadow-inner'
+                        ? 'cursor-default'
                         : drawn
-                          ? 'bg-white/80 cursor-pointer hover:brightness-110 active:brightness-90'
+                          ? 'bg-white cursor-pointer hover:brightness-110 active:brightness-90'
                           : 'bg-white cursor-default'
                   }
                 `}
@@ -83,7 +83,7 @@ export function BingoCard({
                   number === 0
                     ? undefined
                     : marked
-                      ? { color: colors.text, backgroundColor: colors.markedBg }
+                      ? { color: colors.text }
                       : drawn
                         ? {
                             color: colors.text,
@@ -98,9 +98,19 @@ export function BingoCard({
                 }
               >
                 {number > 0 ? (
-                  <span className={marked ? 'line-through decoration-2' : ''}>
-                    {number}
-                  </span>
+                  <>
+                    <span className="relative z-0">{number}</span>
+                    {marked && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center">
+                        <div
+                          className="w-[85%] h-[85%] rounded-full shadow-sm"
+                          style={{
+                            background: `radial-gradient(circle at 35% 35%, rgba(210,180,140,0.65) 0%, rgba(196,168,130,0.55) 50%, rgba(139,105,20,0.45) 100%)`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </>
                 ) : null}
               </button>
             );
