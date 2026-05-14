@@ -544,7 +544,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
             ) : (
               <div className="space-y-4">
                 {cards.map((card, index) => (
-                  <div key={index} className="w-full overflow-x-auto">
+                  <div key={index} className="w-full">
                     <BingoCard
                       card={card}
                       cardIndex={index}

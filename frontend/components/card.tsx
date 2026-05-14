@@ -34,12 +34,12 @@ export function BingoCard({
 
   return (
     <div
-      className="relative bg-white border-2 rounded-xl shadow-md overflow-hidden w-full min-w-[360px]"
+      className="relative bg-white border-2 rounded-xl shadow-md overflow-hidden w-full"
       style={{ borderColor: colors.border }}
     >
       {/* Corner label */}
       <span
-        className="absolute top-1.5 left-2 text-[10px] font-bold opacity-60 z-10 select-none"
+        className="absolute top-1 left-1.5 sm:top-1.5 sm:left-2 text-[9px] sm:text-[10px] font-bold opacity-60 z-10 select-none"
         style={{ color: colors.text }}
       >
         C{cardIndex + 1}
@@ -47,7 +47,7 @@ export function BingoCard({
 
       {/* 9-column grid body */}
       <div
-        className="grid grid-cols-9 gap-px pt-5 pb-1 px-1"
+        className="grid grid-cols-9 gap-px pt-4 sm:pt-5 pb-1 px-0.5 sm:px-1"
         style={{ backgroundColor: colors.gridBg }}
       >
         {Array.from({ length: 3 }, (_, row) =>
@@ -65,9 +65,8 @@ export function BingoCard({
                 disabled={!clickable}
                 className={`
                   relative aspect-square flex items-center justify-center
-                  text-xl sm:text-3xl font-extrabold
+                  text-base sm:text-xl md:text-2xl font-extrabold
                   transition-all duration-150
-                  min-w-[38px] min-h-[38px] sm:min-w-[48px] sm:min-h-[48px]
                   touch-manipulation
                   ${
                     number === 0
