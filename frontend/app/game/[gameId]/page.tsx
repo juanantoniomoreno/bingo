@@ -100,9 +100,12 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
   // --- Reconnection state ---------------------------------------------------
   const [reconnectedToast, setReconnectedToast] = useState(false);
   const lastConnectedRef = useRef(connected);
+  const [unmarkToast, setUnmarkToast] = useState<number | null>(null);
 
   // --- Player-only state ---------------------------------------------------
   const [cards, setCards] = useState<Card[]>([]);
+  const cardsRef = useRef(cards);
+  cardsRef.current = cards;
   const [currentAlert, setCurrentAlert] = useState<AlertState | null>(null);
   const [lineAlertsSeen, setLineAlertsSeen] = useState<number[]>([]);
   const [bingoAlertsSeen, setBingoAlertsSeen] = useState<number[]>([]);
@@ -154,6 +157,16 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
     });
     cleanups.push(cleanupNumberDrawn);
 
+    const cleanupNumberUnmarked = onEvent('numberUnmarked', ({ number, drawnNumbers }) => {
+      setGameState((prev) =>
+        prev ? { ...prev, drawnNumbers } : null
+      );
+      setUnmarkToast(number);
+      const t = setTimeout(() => setUnmarkToast(null), 5000);
+      cleanups.push(() => clearTimeout(t));
+    });
+    cleanups.push(cleanupNumberUnmarked);
+
     const cleanupLineToggled = onEvent('lineToggled', ({ lineCalled }) => {
       setGameState((prev) =>
         prev ? { ...prev, lineCalled } : null
@@ -199,6 +212,20 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
       );
     });
     cleanups.push(cleanupCardMarked);
+
+    const cleanupCardUnmarked = onEvent('cardUnmarked', ({ cardIndex, cellIndex }) => {
+      setCards((prev) =>
+        prev.map((card, i) => {
+          if (i === cardIndex && card.marked[cellIndex]) {
+            const newMarked = [...card.marked];
+            newMarked[cellIndex] = false;
+            return { ...card, marked: newMarked };
+          }
+          return card;
+        })
+      );
+    });
+    cleanups.push(cleanupCardUnmarked);
 
     return () => {
       cleanups.forEach((c) => c());
@@ -313,8 +340,11 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
   /** Dispensador: toggle a number in the 1-90 board. */
   const handleToggleNumber = (number: number) => {
     if (!gameId || gameState?.status === 'ended') return;
-    if (gameState?.drawnNumbers.includes(number)) return;
-    emit('drawNumber', { gameId, number });
+    if (gameState?.drawnNumbers.includes(number)) {
+      emit('unmarkNumber', { gameId, number });
+    } else {
+      emit('drawNumber', { gameId, number });
+    }
   };
 
   const handleToggleLine = () => {
@@ -327,24 +357,32 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
     emit('toggleBingo', { gameId });
   };
 
-  /** Player: mark a cell on one of their cards (optimistic). */
+  /** Player: toggle a cell on one of their cards (optimistic). */
   const handleMarkCard = useCallback(
     (cardIndex: number, cellIndex: number) => {
       if (!gameId || gameState?.status === 'ended') return;
 
+      const card = cardsRef.current?.[cardIndex];
+      if (!card) return;
+      const isCurrentlyMarked = card.marked[cellIndex];
+
       // Optimistic local update
       setCards((prev) =>
-        prev.map((card, i) => {
-          if (i === cardIndex && !card.marked[cellIndex]) {
-            const newMarked = [...card.marked];
-            newMarked[cellIndex] = true;
-            return { ...card, marked: newMarked };
+        prev.map((c, i) => {
+          if (i === cardIndex) {
+            const newMarked = [...c.marked];
+            newMarked[cellIndex] = !isCurrentlyMarked;
+            return { ...c, marked: newMarked };
           }
-          return card;
+          return c;
         })
       );
 
-      emit('markCard', { gameId, cardIndex, cellIndex });
+      if (isCurrentlyMarked) {
+        emit('unmarkCard', { gameId, cardIndex, cellIndex });
+      } else {
+        emit('markCard', { gameId, cardIndex, cellIndex });
+      }
     },
     [gameId, gameState?.status, emit]
   );
@@ -493,6 +531,20 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
             <button
               onClick={() => setError('')}
               className="ml-2 text-red-400 hover:text-red-600 text-lg leading-none"
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* Unmark toast notification (auto-dismiss 5s) */}
+        {unmarkToast !== null && (
+          <div className="p-3 bg-green-50 text-green-800 rounded-lg text-sm flex items-center justify-between">
+            <span>Número {unmarkToast} fue removido por el dispensador</span>
+            <button
+              onClick={() => setUnmarkToast(null)}
+              className="ml-2 text-green-400 hover:text-green-600 text-lg leading-none"
               aria-label="Cerrar"
             >
               ×

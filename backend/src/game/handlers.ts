@@ -7,9 +7,11 @@ import type {
   CreateGamePayload,
   JoinGamePayload,
   DrawNumberPayload,
+  UnmarkNumberPayload,
   ToggleLinePayload,
   ToggleBingoPayload,
   MarkCardPayload,
+  UnmarkCardPayload,
   CallLinePayload,
   CallBingoPayload,
   ErrorPayload,
@@ -197,6 +199,57 @@ export function registerHandlers(
     });
 
     // ──────────────────────────────────────────────
+    // unmarkNumber — Dispensador unmarks a drawn number
+    // ──────────────────────────────────────────────
+    socket.on('unmarkNumber', (payload: UnmarkNumberPayload) => {
+      const room = getGameForSocket(socket, gameManager);
+      if (!room) return;
+
+      // Verify dispensador
+      if (socket.data.playerId !== room.dispensadorId) {
+        socket.emit('error', {
+          code: ErrorCode.NOT_DISPENSADOR,
+          message: 'Solo el dispensador puede desmarcar números',
+        });
+        return;
+      }
+
+      // Validate number range
+      if (payload.number < 1 || payload.number > 90) {
+        socket.emit('error', {
+          code: ErrorCode.NUMBER_NOT_DRAWN,
+          message: 'Número inválido (debe ser entre 1 y 90)',
+        });
+        return;
+      }
+
+      // Check game hasn't ended
+      if (room.state === 'ended') {
+        socket.emit('error', {
+          code: ErrorCode.GAME_ENDED,
+          message: 'La partida ya terminó',
+        });
+        return;
+      }
+
+      // Try to unmark
+      const unmarked = room.unmarkNumber(payload.number);
+      if (!unmarked) {
+        socket.emit('error', {
+          code: ErrorCode.NUMBER_NOT_DRAWN,
+          message: 'Ese número no fue marcado',
+        });
+        return;
+      }
+
+      // Broadcast to all players in the game
+      io.to(payload.gameId).emit('numberUnmarked', {
+        number: payload.number,
+        drawnNumbers: room.getDrawnNumbers(),
+      });
+    });
+
+    // ──────────────────────────────────────────────
     // toggleLine — Dispensador toggles line called state
     // ──────────────────────────────────────────────
     socket.on('toggleLine', (payload: ToggleLinePayload) => {
@@ -284,6 +337,34 @@ export function registerHandlers(
 
       // Emit only to the player who marked (client-side state)
       socket.emit('cardMarked', {
+        cardIndex: payload.cardIndex,
+        cellIndex: payload.cellIndex,
+      });
+    });
+
+    // ──────────────────────────────────────────────
+    // unmarkCard — Player unmarks a cell on their card (client-side only)
+    // Mirror of markCard: validate indices, echo to emitting socket
+    // ──────────────────────────────────────────────
+    socket.on('unmarkCard', (payload: UnmarkCardPayload) => {
+      const room = getGameForSocket(socket, gameManager);
+      if (!room) return;
+
+      // Validate card/cell indices
+      if (
+        payload.cardIndex < 0 ||
+        payload.cellIndex < 0 ||
+        payload.cellIndex >= 27
+      ) {
+        socket.emit('error', {
+          code: ErrorCode.GAME_NOT_FOUND,
+          message: 'Índices de cartón inválidos',
+        });
+        return;
+      }
+
+      // Emit only to the player who unmarked (client-side state)
+      socket.emit('cardUnmarked', {
         cardIndex: payload.cardIndex,
         cellIndex: payload.cellIndex,
       });

@@ -24,10 +24,14 @@ export function BingoCard({
 }: CardProps) {
   const isDrawn = (number: number) => drawnNumbers.includes(number);
 
-  const canMark = (cellIndex: number) => {
+  const canToggle = (cellIndex: number) => {
     if (disabled) return false;
     const num = card.numbers[cellIndex];
-    return num > 0 && isDrawn(num) && !card.marked[cellIndex];
+    if (num <= 0) return false;
+    // Si ya está marcada, SIEMPRE se puede desmarcar (incluso si el dispensador quitó la bola)
+    if (card.marked[cellIndex]) return true;
+    // Si no está marcada, solo se puede marcar si el número salió
+    return isDrawn(num);
   };
 
   const colors = getCardColors(cardIndex);
@@ -56,7 +60,7 @@ export function BingoCard({
             const number = card.numbers[cellIndex];
             const marked = card.marked[cellIndex];
             const drawn = number > 0 && isDrawn(number);
-            const clickable = canMark(cellIndex);
+            const clickable = canToggle(cellIndex);
 
             return (
               <button
@@ -71,8 +75,8 @@ export function BingoCard({
                   ${
                     number === 0
                       ? 'bg-gray-50/50 cursor-default cell-empty'
-                      : marked
-                        ? 'bg-white cursor-default'
+: marked
+                         ? 'bg-white cursor-pointer hover:brightness-110'
                         : drawn
                           ? 'bg-white cursor-pointer hover:brightness-110 active:brightness-90'
                           : 'bg-white cursor-default'
@@ -92,7 +96,7 @@ export function BingoCard({
                 }
                 aria-label={
                   number > 0
-                    ? `Número ${number}${marked ? ' (marcado)' : ''}`
+                    ? `Número ${number}${marked ? ' (marcado, clic para desmarcar)' : ''}`
                     : 'Celda vacía'
                 }
               >

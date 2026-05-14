@@ -58,7 +58,23 @@ export interface ToggleBingoPayload {
   gameId: string;
 }
 
+export interface UnmarkNumberPayload {
+  gameId: string;
+  number: number;
+}
+
+export interface NumberUnmarkedPayload {
+  number: number;
+  drawnNumbers: number[];
+}
+
 export interface MarkCardPayload {
+  gameId: string;
+  cardIndex: number;
+  cellIndex: number;
+}
+
+export interface UnmarkCardPayload {
   gameId: string;
   cardIndex: number;
   cellIndex: number;
@@ -76,9 +92,11 @@ export interface ClientToServerEvents {
   createGame: (payload: CreateGamePayload) => void;
   joinGame: (payload: JoinGamePayload) => void;
   drawNumber: (payload: DrawNumberPayload) => void;
+  unmarkNumber: (payload: UnmarkNumberPayload) => void;
   toggleLine: (payload: ToggleLinePayload) => void;
   toggleBingo: (payload: ToggleBingoPayload) => void;
   markCard: (payload: MarkCardPayload) => void;
+  unmarkCard: (payload: UnmarkCardPayload) => void;
   callLine: (payload: CallLinePayload) => void;
   callBingo: (payload: CallBingoPayload) => void;
 }
@@ -119,6 +137,11 @@ export interface CardMarkedPayload {
   cellIndex: number;
 }
 
+export interface CardUnmarkedPayload {
+  cardIndex: number;
+  cellIndex: number;
+}
+
 export interface GameEndedPayload {
   winner: string;
   reason: 'line' | 'bingo';
@@ -134,9 +157,11 @@ export interface ServerToClientEvents {
   gameJoined: (payload: GameJoinedPayload) => void;
   playerJoined: (payload: PlayerJoinedPayload) => void;
   numberDrawn: (payload: NumberDrawnPayload) => void;
+  numberUnmarked: (payload: NumberUnmarkedPayload) => void;
   lineToggled: (payload: LineToggledPayload) => void;
   bingoToggled: (payload: BingoToggledPayload) => void;
   cardMarked: (payload: CardMarkedPayload) => void;
+  cardUnmarked: (payload: CardUnmarkedPayload) => void;
   gameEnded: (payload: GameEndedPayload) => void;
   error: (payload: ErrorPayload) => void;
 }
@@ -175,6 +200,7 @@ export enum ErrorCode {
   GAME_FULL = 'PARTIDA_LLENA',
   NOT_DISPENSADOR = 'NO_ERES_DISPENSADOR',
   NUMBER_ALREADY_DRAWN = 'NUMERO_INVALIDO',
+  NUMBER_NOT_DRAWN = 'NUMERO_NO_MARCADO',
   INVALID_NAME = 'NOMBRE_INVALIDO',
   GAME_ENDED = 'PARTIDA_TERMINADA',
   INVALID_CARD_COUNT = 'CANTIDAD_INVALIDA',
