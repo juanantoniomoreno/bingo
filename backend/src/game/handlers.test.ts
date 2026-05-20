@@ -472,6 +472,16 @@ describe('toggleBingo handler', () => {
       reason: 'bingo',
     });
   });
+
+  it('debe usar winnerName del payload cuando se proporciona', () => {
+    trigger('toggleBingo', { gameId: 'evil02', winnerName: 'Jugador Ganador' });
+
+    expect(roomEmit).toHaveBeenCalledWith('bingoToggled', { bingoCalled: true });
+    expect(roomEmit).toHaveBeenCalledWith('gameEnded', {
+      winner: 'Jugador Ganador',
+      reason: 'bingo',
+    });
+  });
 });
 
 // =============================================================================

@@ -56,6 +56,7 @@ export interface ToggleLinePayload {
 
 export interface ToggleBingoPayload {
   gameId: string;
+  winnerName?: string;
 }
 
 export interface UnmarkNumberPayload {
