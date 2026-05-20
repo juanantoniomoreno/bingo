@@ -192,7 +192,7 @@ export function registerHandlers(
       }
 
       // Broadcast to all players in the game
-      io.to(payload.gameId).emit('numberDrawn', {
+      io.to(room.id).emit('numberDrawn', {
         number: payload.number,
         drawnNumbers: room.getDrawnNumbers(),
       });
@@ -243,7 +243,7 @@ export function registerHandlers(
       }
 
       // Broadcast to all players in the game
-      io.to(payload.gameId).emit('numberUnmarked', {
+      io.to(room.id).emit('numberUnmarked', {
         number: payload.number,
         drawnNumbers: room.getDrawnNumbers(),
       });
@@ -274,7 +274,7 @@ export function registerHandlers(
 
       const lineCalled = room.toggleLine();
 
-      io.to(payload.gameId).emit('lineToggled', { lineCalled });
+      io.to(room.id).emit('lineToggled', { lineCalled });
     });
 
     // ──────────────────────────────────────────────
@@ -302,12 +302,12 @@ export function registerHandlers(
 
       const bingoCalled = room.toggleBingo();
 
-      io.to(payload.gameId).emit('bingoToggled', { bingoCalled });
+      io.to(room.id).emit('bingoToggled', { bingoCalled });
 
       // If bingo was called, end the game
       if (bingoCalled) {
         const dispensador = room.getPlayer(room.dispensadorId!);
-        io.to(payload.gameId).emit('gameEnded', {
+        io.to(room.id).emit('gameEnded', {
           winner: dispensador?.name || 'Dispensador',
           reason: 'bingo',
         });
@@ -387,10 +387,10 @@ export function registerHandlers(
 
       // Player calls line — just broadcast it
       const player = room.getPlayer(socket.data.playerId);
-      io.to(payload.gameId).emit('lineToggled', { lineCalled: true });
+      io.to(room.id).emit('lineToggled', { lineCalled: true });
 
       console.log(
-        `📝 Player ${player?.name} called LINE in game ${payload.gameId}`
+        `📝 Player ${player?.name} called LINE in game ${room.id}`
       );
     });
 
@@ -413,14 +413,14 @@ export function registerHandlers(
       room.bingoCalled = true;
       room.state = 'ended';
 
-      io.to(payload.gameId).emit('bingoToggled', { bingoCalled: true });
-      io.to(payload.gameId).emit('gameEnded', {
+      io.to(room.id).emit('bingoToggled', { bingoCalled: true });
+      io.to(room.id).emit('gameEnded', {
         winner: player?.name || 'Jugador',
         reason: 'bingo',
       });
 
       console.log(
-        `🎉 Player ${player?.name} called BINGO in game ${payload.gameId}`
+        `🎉 Player ${player?.name} called BINGO in game ${room.id}`
       );
     });
 
