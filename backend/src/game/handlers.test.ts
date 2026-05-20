@@ -149,6 +149,20 @@ describe('unmarkNumber handler', () => {
     });
     expect(roomEmit).not.toHaveBeenCalled();
   });
+
+  // ── Security: cross-game injection ──────────────────────────────────
+
+  it('debe emitir numberUnmarked a la sala del socket (room.id), no al gameId del payload', () => {
+    trigger('unmarkNumber', { gameId: 'evil02', number: 42 });
+
+    // Should broadcast to the socket's actual room, NOT the payload gameId
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('numberUnmarked', {
+      number: 42,
+      drawnNumbers: [7],
+    });
+  });
 });
 
 // =============================================================================
@@ -260,6 +274,332 @@ describe('unmarkCard handler', () => {
     expect(mockSocket.emit).toHaveBeenCalledWith('error', {
       code: ErrorCode.GAME_NOT_FOUND,
       message: 'Índices de cartón inválidos',
+    });
+  });
+});
+
+// =============================================================================
+// drawNumber handler
+// =============================================================================
+
+describe('drawNumber handler', () => {
+  let mockIo: any;
+  let roomEmit: ReturnType<typeof vi.fn>;
+  let mockSocket: any;
+  let mockGameManager: any;
+  let room: GameRoom;
+  let trigger: (event: string, payload: any) => void;
+
+  beforeEach(() => {
+    room = new GameRoom('test01');
+    room.state = 'playing';
+    room.dispensadorId = 'disp_001';
+
+    const handlers = new Map<string, Function>();
+
+    mockSocket = {
+      on: vi.fn((event: string, cb: Function) => {
+        handlers.set(event, cb);
+        return mockSocket;
+      }),
+      emit: vi.fn(),
+      join: vi.fn(),
+      data: {
+        gameId: 'test01',
+        playerId: 'disp_001',
+      },
+    };
+
+    trigger = (event: string, payload: any) => {
+      const h = handlers.get(event);
+      if (h) h(payload);
+    };
+
+    roomEmit = vi.fn();
+
+    mockIo = {
+      on: vi.fn((event: string, cb: Function) => {
+        if (event === 'connection') cb(mockSocket);
+        return mockIo;
+      }),
+      to: vi.fn(() => ({ emit: roomEmit })),
+    };
+
+    mockGameManager = {
+      getGame: vi.fn().mockReturnValue(room),
+    };
+
+    registerHandlers(mockIo as any, mockGameManager as any);
+  });
+
+  it('debe emitir numberDrawn a la sala del socket, no al gameId del payload', () => {
+    trigger('drawNumber', { gameId: 'evil02', number: 42 });
+
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('numberDrawn', {
+      number: 42,
+      drawnNumbers: [42],
+    });
+  });
+});
+
+// =============================================================================
+// toggleLine handler
+// =============================================================================
+
+describe('toggleLine handler', () => {
+  let mockIo: any;
+  let roomEmit: ReturnType<typeof vi.fn>;
+  let mockSocket: any;
+  let mockGameManager: any;
+  let room: GameRoom;
+  let trigger: (event: string, payload: any) => void;
+
+  beforeEach(() => {
+    room = new GameRoom('test01');
+    room.state = 'playing';
+    room.dispensadorId = 'disp_001';
+
+    const handlers = new Map<string, Function>();
+
+    mockSocket = {
+      on: vi.fn((event: string, cb: Function) => {
+        handlers.set(event, cb);
+        return mockSocket;
+      }),
+      emit: vi.fn(),
+      join: vi.fn(),
+      data: {
+        gameId: 'test01',
+        playerId: 'disp_001',
+      },
+    };
+
+    trigger = (event: string, payload: any) => {
+      const h = handlers.get(event);
+      if (h) h(payload);
+    };
+
+    roomEmit = vi.fn();
+
+    mockIo = {
+      on: vi.fn((event: string, cb: Function) => {
+        if (event === 'connection') cb(mockSocket);
+        return mockIo;
+      }),
+      to: vi.fn(() => ({ emit: roomEmit })),
+    };
+
+    mockGameManager = {
+      getGame: vi.fn().mockReturnValue(room),
+    };
+
+    registerHandlers(mockIo as any, mockGameManager as any);
+  });
+
+  it('debe emitir lineToggled a la sala del socket, no al gameId del payload', () => {
+    trigger('toggleLine', { gameId: 'evil02' });
+
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('lineToggled', { lineCalled: true });
+  });
+});
+
+// =============================================================================
+// toggleBingo handler
+// =============================================================================
+
+describe('toggleBingo handler', () => {
+  let mockIo: any;
+  let roomEmit: ReturnType<typeof vi.fn>;
+  let mockSocket: any;
+  let mockGameManager: any;
+  let room: GameRoom;
+  let trigger: (event: string, payload: any) => void;
+
+  beforeEach(() => {
+    room = new GameRoom('test01');
+    room.state = 'playing';
+    room.dispensadorId = 'disp_001';
+
+    const handlers = new Map<string, Function>();
+
+    mockSocket = {
+      on: vi.fn((event: string, cb: Function) => {
+        handlers.set(event, cb);
+        return mockSocket;
+      }),
+      emit: vi.fn(),
+      join: vi.fn(),
+      data: {
+        gameId: 'test01',
+        playerId: 'disp_001',
+      },
+    };
+
+    trigger = (event: string, payload: any) => {
+      const h = handlers.get(event);
+      if (h) h(payload);
+    };
+
+    roomEmit = vi.fn();
+
+    mockIo = {
+      on: vi.fn((event: string, cb: Function) => {
+        if (event === 'connection') cb(mockSocket);
+        return mockIo;
+      }),
+      to: vi.fn(() => ({ emit: roomEmit })),
+    };
+
+    mockGameManager = {
+      getGame: vi.fn().mockReturnValue(room),
+    };
+
+    registerHandlers(mockIo as any, mockGameManager as any);
+  });
+
+  it('debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload', () => {
+    trigger('toggleBingo', { gameId: 'evil02' });
+
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('bingoToggled', { bingoCalled: true });
+    expect(roomEmit).toHaveBeenCalledWith('gameEnded', {
+      winner: 'Dispensador',
+      reason: 'bingo',
+    });
+  });
+});
+
+// =============================================================================
+// callLine handler
+// =============================================================================
+
+describe('callLine handler', () => {
+  let mockIo: any;
+  let roomEmit: ReturnType<typeof vi.fn>;
+  let mockSocket: any;
+  let mockGameManager: any;
+  let room: GameRoom;
+  let trigger: (event: string, payload: any) => void;
+
+  beforeEach(() => {
+    room = new GameRoom('test01');
+    room.state = 'playing';
+    room.dispensadorId = 'disp_001';
+
+    const handlers = new Map<string, Function>();
+
+    mockSocket = {
+      on: vi.fn((event: string, cb: Function) => {
+        handlers.set(event, cb);
+        return mockSocket;
+      }),
+      emit: vi.fn(),
+      join: vi.fn(),
+      data: {
+        gameId: 'test01',
+        playerId: 'player_001',
+      },
+    };
+
+    trigger = (event: string, payload: any) => {
+      const h = handlers.get(event);
+      if (h) h(payload);
+    };
+
+    roomEmit = vi.fn();
+
+    mockIo = {
+      on: vi.fn((event: string, cb: Function) => {
+        if (event === 'connection') cb(mockSocket);
+        return mockIo;
+      }),
+      to: vi.fn(() => ({ emit: roomEmit })),
+    };
+
+    mockGameManager = {
+      getGame: vi.fn().mockReturnValue(room),
+    };
+
+    registerHandlers(mockIo as any, mockGameManager as any);
+  });
+
+  it('debe emitir lineToggled a la sala del socket, no al gameId del payload', () => {
+    trigger('callLine', { gameId: 'evil02' });
+
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('lineToggled', { lineCalled: true });
+  });
+});
+
+// =============================================================================
+// callBingo handler
+// =============================================================================
+
+describe('callBingo handler', () => {
+  let mockIo: any;
+  let roomEmit: ReturnType<typeof vi.fn>;
+  let mockSocket: any;
+  let mockGameManager: any;
+  let room: GameRoom;
+  let trigger: (event: string, payload: any) => void;
+
+  beforeEach(() => {
+    room = new GameRoom('test01');
+    room.state = 'playing';
+    room.dispensadorId = 'disp_001';
+
+    const handlers = new Map<string, Function>();
+
+    mockSocket = {
+      on: vi.fn((event: string, cb: Function) => {
+        handlers.set(event, cb);
+        return mockSocket;
+      }),
+      emit: vi.fn(),
+      join: vi.fn(),
+      data: {
+        gameId: 'test01',
+        playerId: 'player_001',
+      },
+    };
+
+    trigger = (event: string, payload: any) => {
+      const h = handlers.get(event);
+      if (h) h(payload);
+    };
+
+    roomEmit = vi.fn();
+
+    mockIo = {
+      on: vi.fn((event: string, cb: Function) => {
+        if (event === 'connection') cb(mockSocket);
+        return mockIo;
+      }),
+      to: vi.fn(() => ({ emit: roomEmit })),
+    };
+
+    mockGameManager = {
+      getGame: vi.fn().mockReturnValue(room),
+    };
+
+    registerHandlers(mockIo as any, mockGameManager as any);
+  });
+
+  it('debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload', () => {
+    trigger('callBingo', { gameId: 'evil02' });
+
+    expect(mockIo.to).toHaveBeenCalledWith('test01');
+    expect(mockIo.to).not.toHaveBeenCalledWith('evil02');
+    expect(roomEmit).toHaveBeenCalledWith('bingoToggled', { bingoCalled: true });
+    expect(roomEmit).toHaveBeenCalledWith('gameEnded', {
+      winner: 'Jugador',
+      reason: 'bingo',
     });
   });
 });
