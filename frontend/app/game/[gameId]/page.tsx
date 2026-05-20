@@ -352,9 +352,9 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
     emit('toggleLine', { gameId });
   };
 
-  const handleToggleBingo = () => {
+  const handleToggleBingo = (winnerName?: string) => {
     if (!gameId || gameState?.status === 'ended') return;
-    emit('toggleBingo', { gameId });
+    emit('toggleBingo', { gameId, winnerName });
   };
 
   /** Player: toggle a cell on one of their cards (optimistic). */
@@ -573,6 +573,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
             <DispensadorControls
               lineCalled={gameState.lineCalled}
               bingoCalled={gameState.bingoCalled}
+              players={gameState.players.map((p) => p.name)}
               onToggleLine={handleToggleLine}
               onToggleBingo={handleToggleBingo}
               disabled={gameState.status === 'ended'}

@@ -307,8 +307,9 @@ export function registerHandlers(
       // If bingo was called, end the game
       if (bingoCalled) {
         const dispensador = room.getPlayer(room.dispensadorId!);
+        const winner = payload.winnerName || dispensador?.name || 'Dispensador';
         io.to(room.id).emit('gameEnded', {
-          winner: dispensador?.name || 'Dispensador',
+          winner,
           reason: 'bingo',
         });
       }
