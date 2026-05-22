@@ -89,6 +89,11 @@ export interface CallBingoPayload {
 	gameId: string;
 }
 
+export interface RejoinGamePayload {
+	gameId: string;
+	playerId: string;
+}
+
 export interface ClientToServerEvents {
 	createGame: (payload: CreateGamePayload) => void;
 	joinGame: (payload: JoinGamePayload) => void;
@@ -100,6 +105,7 @@ export interface ClientToServerEvents {
 	unmarkCard: (payload: UnmarkCardPayload) => void;
 	callLine: (payload: CallLinePayload) => void;
 	callBingo: (payload: CallBingoPayload) => void;
+	rejoinGame: (payload: RejoinGamePayload) => void;
 }
 
 // -----------------------------------------------------------------------------
@@ -153,9 +159,16 @@ export interface ErrorPayload {
 	message: string;
 }
 
+export interface GameRejoinedPayload {
+	game: GameState;
+	playerId: string;
+	cards: Card[];
+}
+
 export interface ServerToClientEvents {
 	gameCreated: (payload: GameCreatedPayload) => void;
 	gameJoined: (payload: GameJoinedPayload) => void;
+	gameRejoined: (payload: GameRejoinedPayload) => void;
 	playerJoined: (payload: PlayerJoinedPayload) => void;
 	numberDrawn: (payload: NumberDrawnPayload) => void;
 	numberUnmarked: (payload: NumberUnmarkedPayload) => void;

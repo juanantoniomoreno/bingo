@@ -15,6 +15,7 @@ import type {
 	CallLinePayload,
 	CallBingoPayload,
 	ErrorPayload,
+	RejoinGamePayload,
 } from "shared";
 import { ErrorCode, hasLineServer, hasBingoServer } from "shared";
 
@@ -74,6 +75,49 @@ export function registerHandlers(
 
 			console.log(
 				`🎮 Game created: ${result.gameId} by ${result.playerName} (${result.playerId})`,
+			);
+		});
+
+		// ──────────────────────────────────────────────
+		// rejoinGame — Returning player reconnects to an existing game
+		// ──────────────────────────────────────────────
+		socket.on("rejoinGame", (payload: RejoinGamePayload) => {
+			if (!isValidGameId(payload.gameId)) {
+				const error: ErrorPayload = {
+					code: ErrorCode.GAME_NOT_FOUND,
+					message: "Partida no encontrada",
+				};
+				socket.emit("error", error);
+				return;
+			}
+
+			const result = gameManager.rejoinGame(payload.gameId, payload.playerId);
+
+			if (typeof result === "string") {
+				const error: ErrorPayload = {
+					code: result,
+					message: getErrorMessage(result),
+				};
+				socket.emit("error", error);
+				return;
+			}
+
+			// Join the socket room
+			socket.join(payload.gameId);
+
+			// Restore socket data
+			socket.data.gameId = payload.gameId;
+			socket.data.playerId = result.player.id;
+
+			// Send current game state to the rejoining player
+			socket.emit("gameRejoined", {
+				game: result.game.toGameState(),
+				playerId: result.player.id,
+				cards: result.player.cards,
+			});
+
+			console.log(
+				`🔄 Player ${result.player.name} (${result.player.id}) rejoined game ${payload.gameId}`,
 			);
 		});
 
