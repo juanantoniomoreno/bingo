@@ -158,6 +158,48 @@ export class GameRoom {
 	}
 
 	/**
+	 * Serialize to a plain JSON-compatible object for Redis storage.
+	 */
+	toJSON(): object {
+		return {
+			id: this.id,
+			state: this.state,
+			dispensadorId: this.dispensadorId,
+			drawnNumbers: Array.from(this.drawnNumbers),
+			lineCalled: this.lineCalled,
+			bingoCalled: this.bingoCalled,
+			createdAt: this.createdAt,
+			players: this.getPlayers(),
+		};
+	}
+
+	/**
+	 * Reconstruct a GameRoom from a plain JSON object.
+	 */
+	static fromJSON(data: any): GameRoom {
+		const room = new GameRoom(data.id);
+		room.state = data.state;
+		room.dispensadorId = data.dispensadorId ?? null;
+		room.drawnNumbers = new Set(data.drawnNumbers ?? []);
+		room.lineCalled = data.lineCalled ?? false;
+		room.bingoCalled = data.bingoCalled ?? false;
+		room.createdAt = data.createdAt ?? Date.now();
+
+		if (Array.isArray(data.players)) {
+			for (const player of data.players) {
+				room['players'].set(player.id, {
+					id: player.id,
+					name: player.name,
+					cards: player.cards ?? [],
+					isDispensador: player.isDispensador ?? false,
+				});
+			}
+		}
+
+		return room;
+	}
+
+	/**
 	 * Serialize game key prefix (for Redis)
 	 */
 	static getGameKey(gameId: string): string {

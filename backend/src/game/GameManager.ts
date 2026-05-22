@@ -1,4 +1,5 @@
 import { customAlphabet } from 'nanoid';
+import type { Redis } from 'ioredis';
 
 // Generate only lowercase alphanumeric IDs (no underscores, no hyphens)
 const generateGameId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
@@ -20,11 +21,48 @@ import { ErrorCode as ErrorCodeEnum } from 'shared';
 const MAX_PLAYERS = 50;
 
 /**
+ * Redis key prefix for game state
+ */
+const REDIS_KEY_PREFIX = 'bingo:game:';
+
+/**
+ * Redis TTL for game state (24 hours in seconds)
+ */
+const REDIS_TTL = 86400;
+
+/**
  * GameManager — global registry mapping gameId → GameRoom.
- * In-memory Map for fast lookups; Redis sync is a future enhancement.
+ * Uses Redis as source of truth with an in-memory Map as hot cache.
  */
 export class GameManager {
   private games: Map<string, GameRoom> = new Map();
+  private redis: Redis | null = null;
+
+  constructor(redis?: Redis) {
+    if (redis) {
+      this.redis = redis;
+    }
+  }
+
+  /**
+   * Build the Redis key for a given gameId.
+   */
+  private static redisKey(gameId: string): string {
+    return `${REDIS_KEY_PREFIX}${gameId}`;
+  }
+
+  /**
+   * Persist a room to Redis (fire-and-forget with error logging).
+   */
+  async saveGame(room: GameRoom): Promise<void> {
+    if (!this.redis) return;
+    try {
+      const serialized = JSON.stringify(room.toJSON());
+      await this.redis.setex(GameManager.redisKey(room.id), REDIS_TTL, serialized);
+    } catch (err) {
+      console.error('❌ Failed to save game to Redis:', err);
+    }
+  }
 
   /**
    * Create a new game. The creator becomes the dispensador.
@@ -40,6 +78,9 @@ export class GameManager {
     room.start(); // Move to 'playing' state so dispensador can draw numbers
 
     this.games.set(gameId, room);
+
+    // Persist to Redis (async, non-blocking)
+    this.saveGame(room).catch(() => {});
 
     return {
       gameId,
@@ -78,21 +119,49 @@ export class GameManager {
     const cards = CardGenerator.generateCards(cardCount);
     const player = room.addPlayer(playerName, cardCount, cards, false);
 
+    // Persist updated room to Redis
+    this.saveGame(room).catch(() => {});
+
     return { player, game: room };
   }
 
   /**
-   * Get a game room by ID. Returns undefined if not found.
+   * Get a game room by ID.
+   * Checks memory first, then falls back to Redis.
    */
-  getGame(gameId: string): GameRoom | undefined {
-    return this.games.get(gameId);
+  async getGame(gameId: string): Promise<GameRoom | undefined> {
+    // Check memory cache first
+    const cached = this.games.get(gameId);
+    if (cached) {
+      return cached;
+    }
+
+    // Fall back to Redis
+    if (!this.redis) {
+      return undefined;
+    }
+
+    try {
+      const serialized = await this.redis.get(GameManager.redisKey(gameId));
+      if (!serialized) {
+        return undefined;
+      }
+
+      const data = JSON.parse(serialized);
+      const room = GameRoom.fromJSON(data);
+      this.games.set(gameId, room); // Warm cache
+      return room;
+    } catch (err) {
+      console.error('❌ Failed to load game from Redis:', err);
+      return undefined;
+    }
   }
 
   /**
    * Get the public game state for REST API polling.
    */
-  getGameStateResponse(gameId: string): GameStateResponse | ErrorCode {
-    const room = this.games.get(gameId);
+  async getGameStateResponse(gameId: string): Promise<GameStateResponse | ErrorCode> {
+    const room = await this.getGame(gameId);
 
     if (!room) {
       return ErrorCodeEnum.GAME_NOT_FOUND;
@@ -110,10 +179,20 @@ export class GameManager {
   }
 
   /**
-   * Delete a game from the registry (for cleanup).
+   * Delete a game from both memory and Redis.
    */
-  deleteGame(gameId: string): boolean {
-    return this.games.delete(gameId);
+  async deleteGame(gameId: string): Promise<boolean> {
+    const removed = this.games.delete(gameId);
+
+    if (this.redis) {
+      try {
+        await this.redis.del(GameManager.redisKey(gameId));
+      } catch (err) {
+        console.error('❌ Failed to delete game from Redis:', err);
+      }
+    }
+
+    return removed;
   }
 
   /**

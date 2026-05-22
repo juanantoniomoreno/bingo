@@ -151,8 +151,8 @@ export function registerHandlers(
 		// ──────────────────────────────────────────────
 		// drawNumber — Dispensador draws a number (1-90)
 		// ──────────────────────────────────────────────
-		socket.on("drawNumber", (payload: DrawNumberPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("drawNumber", async (payload: DrawNumberPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			// Verify dispensador
@@ -192,6 +192,9 @@ export function registerHandlers(
 				return;
 			}
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			// Broadcast to all players in the game
 			io.to(room.id).emit("numberDrawn", {
 				number: payload.number,
@@ -202,8 +205,8 @@ export function registerHandlers(
 		// ──────────────────────────────────────────────
 		// unmarkNumber — Dispensador unmarks a drawn number
 		// ──────────────────────────────────────────────
-		socket.on("unmarkNumber", (payload: UnmarkNumberPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("unmarkNumber", async (payload: UnmarkNumberPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			// Verify dispensador
@@ -243,6 +246,9 @@ export function registerHandlers(
 				return;
 			}
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			// Broadcast to all players in the game
 			io.to(room.id).emit("numberUnmarked", {
 				number: payload.number,
@@ -253,8 +259,8 @@ export function registerHandlers(
 		// ──────────────────────────────────────────────
 		// toggleLine — Dispensador toggles line called state
 		// ──────────────────────────────────────────────
-		socket.on("toggleLine", (payload: ToggleLinePayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("toggleLine", async (payload: ToggleLinePayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			if (socket.data.playerId !== room.dispensadorId) {
@@ -275,14 +281,17 @@ export function registerHandlers(
 
 			const lineCalled = room.toggleLine();
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			io.to(room.id).emit("lineToggled", { lineCalled });
 		});
 
 		// ──────────────────────────────────────────────
 		// toggleBingo — Dispensador toggles bingo called state
 		// ──────────────────────────────────────────────
-		socket.on("toggleBingo", (payload: ToggleBingoPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("toggleBingo", async (payload: ToggleBingoPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			if (socket.data.playerId !== room.dispensadorId) {
@@ -303,6 +312,9 @@ export function registerHandlers(
 
 			const bingoCalled = room.toggleBingo();
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			io.to(room.id).emit("bingoToggled", { bingoCalled });
 
 			// If bingo was called, end the game
@@ -320,8 +332,8 @@ export function registerHandlers(
 		// markCard — Player marks a cell on their card (client-side only)
 		// Server receives the event but only validates basics
 		// ──────────────────────────────────────────────
-		socket.on("markCard", (payload: MarkCardPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("markCard", async (payload: MarkCardPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			// Validate card/cell indices
@@ -348,8 +360,8 @@ export function registerHandlers(
 		// unmarkCard — Player unmarks a cell on their card (client-side only)
 		// Mirror of markCard: validate indices, echo to emitting socket
 		// ──────────────────────────────────────────────
-		socket.on("unmarkCard", (payload: UnmarkCardPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("unmarkCard", async (payload: UnmarkCardPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			// Validate card/cell indices
@@ -375,8 +387,8 @@ export function registerHandlers(
 		// ──────────────────────────────────────────────
 		// callLine — Player calls line
 		// ──────────────────────────────────────────────
-		socket.on("callLine", (payload: CallLinePayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("callLine", async (payload: CallLinePayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			if (room.state === "ended") {
@@ -411,14 +423,17 @@ export function registerHandlers(
 
 			io.to(room.id).emit("lineToggled", { lineCalled: true });
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			console.log(`📝 Player ${player.name} called LINE in game ${room.id}`);
 		});
 
 		// ──────────────────────────────────────────────
 		// callBingo — Player calls bingo (ends game)
 		// ──────────────────────────────────────────────
-		socket.on("callBingo", (payload: CallBingoPayload) => {
-			const room = getGameForSocket(socket, gameManager);
+		socket.on("callBingo", async (payload: CallBingoPayload) => {
+			const room = await getGameForSocket(socket, gameManager);
 			if (!room) return;
 
 			if (room.state === "ended") {
@@ -460,6 +475,9 @@ export function registerHandlers(
 				reason: "bingo",
 			});
 
+			// Persist to Redis
+			await gameManager.saveGame(room);
+
 			console.log(`🎉 Player ${player.name} called BINGO in game ${room.id}`);
 		});
 
@@ -476,10 +494,10 @@ export function registerHandlers(
  * Helper: Get the GameRoom for a socket's gameId.
  * Emits an error if not found.
  */
-function getGameForSocket(
+async function getGameForSocket(
 	socket: BingoSocket,
 	gameManager: GameManager,
-): GameRoom | null {
+): Promise<GameRoom | null> {
 	const gameId = socket.data.gameId;
 	if (!gameId) {
 		socket.emit("error", {
@@ -489,7 +507,7 @@ function getGameForSocket(
 		return null;
 	}
 
-	const room = gameManager.getGame(gameId);
+	const room = await gameManager.getGame(gameId);
 	if (!room) {
 		socket.emit("error", {
 			code: ErrorCode.GAME_NOT_FOUND,

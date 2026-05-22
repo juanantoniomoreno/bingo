@@ -38,9 +38,9 @@ describe("unmarkNumber handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -55,7 +55,8 @@ describe("unmarkNumber handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
@@ -64,8 +65,8 @@ describe("unmarkNumber handler", () => {
 
 	// ── Happy path ──────────────────────────────────────────────────────
 
-	it("debe desmarcar un número marcado y emitir numberUnmarked a la sala", () => {
-		trigger("unmarkNumber", { gameId: "test01", number: 42 });
+	it("debe desmarcar un número marcado y emitir numberUnmarked a la sala", async () => {
+		await trigger("unmarkNumber", { gameId: "test01", number: 42 });
 
 		// Should broadcast to the room
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
@@ -87,10 +88,10 @@ describe("unmarkNumber handler", () => {
 
 	// ── Validation: non-dispensador ─────────────────────────────────────
 
-	it("debe rechazar desmarcado de no-dispensador con error NOT_DISPENSADOR", () => {
+	it("debe rechazar desmarcado de no-dispensador con error NOT_DISPENSADOR", async () => {
 		mockSocket.data.playerId = "player_999";
 
-		trigger("unmarkNumber", { gameId: "test01", number: 42 });
+		await trigger("unmarkNumber", { gameId: "test01", number: 42 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.NOT_DISPENSADOR,
@@ -106,10 +107,10 @@ describe("unmarkNumber handler", () => {
 
 	// ── Validation: game ended ──────────────────────────────────────────
 
-	it("debe rechazar desmarcado en partida terminada con error GAME_ENDED", () => {
+	it("debe rechazar desmarcado en partida terminada con error GAME_ENDED", async () => {
 		room.state = "ended";
 
-		trigger("unmarkNumber", { gameId: "test01", number: 42 });
+		await trigger("unmarkNumber", { gameId: "test01", number: 42 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.GAME_ENDED,
@@ -121,8 +122,8 @@ describe("unmarkNumber handler", () => {
 
 	// ── Validation: number not drawn ────────────────────────────────────
 
-	it("debe rechazar desmarcado de número no marcado con error NUMBER_NOT_DRAWN", () => {
-		trigger("unmarkNumber", { gameId: "test01", number: 50 });
+	it("debe rechazar desmarcado de número no marcado con error NUMBER_NOT_DRAWN", async () => {
+		await trigger("unmarkNumber", { gameId: "test01", number: 50 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.NUMBER_NOT_DRAWN,
@@ -134,8 +135,8 @@ describe("unmarkNumber handler", () => {
 
 	// ── Validation: number out of range ─────────────────────────────────
 
-	it("debe rechazar número fuera de rango con error NUMBER_NOT_DRAWN", () => {
-		trigger("unmarkNumber", { gameId: "test01", number: 0 });
+	it("debe rechazar número fuera de rango con error NUMBER_NOT_DRAWN", async () => {
+		await trigger("unmarkNumber", { gameId: "test01", number: 0 });
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.NUMBER_NOT_DRAWN,
 			message: "Número inválido (debe ser entre 1 y 90)",
@@ -146,7 +147,7 @@ describe("unmarkNumber handler", () => {
 		mockSocket.emit.mockClear();
 		roomEmit.mockClear();
 
-		trigger("unmarkNumber", { gameId: "test01", number: 91 });
+		await trigger("unmarkNumber", { gameId: "test01", number: 91 });
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.NUMBER_NOT_DRAWN,
 			message: "Número inválido (debe ser entre 1 y 90)",
@@ -156,8 +157,8 @@ describe("unmarkNumber handler", () => {
 
 	// ── Security: cross-game injection ──────────────────────────────────
 
-	it("debe emitir numberUnmarked a la sala del socket (room.id), no al gameId del payload", () => {
-		trigger("unmarkNumber", { gameId: "evil02", number: 42 });
+	it("debe emitir numberUnmarked a la sala del socket (room.id), no al gameId del payload", async () => {
+		await trigger("unmarkNumber", { gameId: "evil02", number: 42 });
 
 		// Should broadcast to the socket's actual room, NOT the payload gameId
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
@@ -201,9 +202,9 @@ describe("unmarkCard handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -217,7 +218,8 @@ describe("unmarkCard handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
@@ -225,8 +227,8 @@ describe("unmarkCard handler", () => {
 
 	// ── Happy path: valid unmark echoes cardUnmarked to emitting socket ──
 
-	it("debe emitir cardUnmarked al socket emisor cuando los índices son válidos", () => {
-		trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: 5 });
+	it("debe emitir cardUnmarked al socket emisor cuando los índices son válidos", async () => {
+		await trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: 5 });
 
 		// Should emit back to the SAME socket (not broadcast to room)
 		expect(mockSocket.emit).toHaveBeenCalledWith("cardUnmarked", {
@@ -241,8 +243,8 @@ describe("unmarkCard handler", () => {
 
 	// ── Triangulation: different valid indices ────────────────────────────
 
-	it("debe emitir cardUnmarked con cardIndex y cellIndex diferentes", () => {
-		trigger("unmarkCard", { gameId: "test01", cardIndex: 2, cellIndex: 26 });
+	it("debe emitir cardUnmarked con cardIndex y cellIndex diferentes", async () => {
+		await trigger("unmarkCard", { gameId: "test01", cardIndex: 2, cellIndex: 26 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("cardUnmarked", {
 			cardIndex: 2,
@@ -252,8 +254,8 @@ describe("unmarkCard handler", () => {
 
 	// ── Validation: cellIndex out of bounds ────────────────────────────────
 
-	it("debe rechazar cellIndex < 0 con error", () => {
-		trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: -1 });
+	it("debe rechazar cellIndex < 0 con error", async () => {
+		await trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: -1 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.GAME_NOT_FOUND,
@@ -261,8 +263,8 @@ describe("unmarkCard handler", () => {
 		});
 	});
 
-	it("debe rechazar cellIndex >= 27 con error", () => {
-		trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: 27 });
+	it("debe rechazar cellIndex >= 27 con error", async () => {
+		await trigger("unmarkCard", { gameId: "test01", cardIndex: 0, cellIndex: 27 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.GAME_NOT_FOUND,
@@ -272,8 +274,8 @@ describe("unmarkCard handler", () => {
 
 	// ── Validation: cardIndex < 0 ─────────────────────────────────────────
 
-	it("debe rechazar cardIndex < 0 con error", () => {
-		trigger("unmarkCard", { gameId: "test01", cardIndex: -1, cellIndex: 5 });
+	it("debe rechazar cardIndex < 0 con error", async () => {
+		await trigger("unmarkCard", { gameId: "test01", cardIndex: -1, cellIndex: 5 });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith("error", {
 			code: ErrorCode.GAME_NOT_FOUND,
@@ -314,9 +316,9 @@ describe("drawNumber handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -330,14 +332,15 @@ describe("drawNumber handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("debe emitir numberDrawn a la sala del socket, no al gameId del payload", () => {
-		trigger("drawNumber", { gameId: "evil02", number: 42 });
+	it("debe emitir numberDrawn a la sala del socket, no al gameId del payload", async () => {
+		await trigger("drawNumber", { gameId: "evil02", number: 42 });
 
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
 		expect(mockIo.to).not.toHaveBeenCalledWith("evil02");
@@ -380,9 +383,9 @@ describe("toggleLine handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -396,14 +399,15 @@ describe("toggleLine handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("debe emitir lineToggled a la sala del socket, no al gameId del payload", () => {
-		trigger("toggleLine", { gameId: "evil02" });
+	it("debe emitir lineToggled a la sala del socket, no al gameId del payload", async () => {
+		await trigger("toggleLine", { gameId: "evil02" });
 
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
 		expect(mockIo.to).not.toHaveBeenCalledWith("evil02");
@@ -443,9 +447,9 @@ describe("toggleBingo handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -459,14 +463,15 @@ describe("toggleBingo handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload", () => {
-		trigger("toggleBingo", { gameId: "evil02" });
+	it("debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload", async () => {
+		await trigger("toggleBingo", { gameId: "evil02" });
 
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
 		expect(mockIo.to).not.toHaveBeenCalledWith("evil02");
@@ -479,8 +484,8 @@ describe("toggleBingo handler", () => {
 		});
 	});
 
-	it("debe usar winnerName del payload cuando se proporciona", () => {
-		trigger("toggleBingo", { gameId: "evil02", winnerName: "Jugador Ganador" });
+	it("debe usar winnerName del payload cuando se proporciona", async () => {
+		await trigger("toggleBingo", { gameId: "evil02", winnerName: "Jugador Ganador" });
 
 		expect(roomEmit).toHaveBeenCalledWith("bingoToggled", {
 			bingoCalled: true,
@@ -544,9 +549,9 @@ describe("callLine handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -560,14 +565,15 @@ describe("callLine handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("debe emitir lineToggled a la sala del socket, no al gameId del payload", () => {
-		trigger("callLine", { gameId: "evil02" });
+	it("debe emitir lineToggled a la sala del socket, no al gameId del payload", async () => {
+		await trigger("callLine", { gameId: "evil02" });
 
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
 		expect(mockIo.to).not.toHaveBeenCalledWith("evil02");
@@ -636,9 +642,9 @@ describe("callBingo handler", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -652,14 +658,15 @@ describe("callBingo handler", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload", () => {
-		trigger("callBingo", { gameId: "evil02" });
+	it("debe emitir bingoToggled y gameEnded a la sala del socket, no al gameId del payload", async () => {
+		await trigger("callBingo", { gameId: "evil02" });
 
 		expect(mockIo.to).toHaveBeenCalledWith("test01");
 		expect(mockIo.to).not.toHaveBeenCalledWith("evil02");
@@ -725,9 +732,9 @@ describe("callLine validation", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -741,14 +748,15 @@ describe("callLine validation", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("emits lineToggled when player has a valid line", () => {
-		trigger("callLine", { gameId: "test01" });
+	it("emits lineToggled when player has a valid line", async () => {
+		await trigger("callLine", { gameId: "test01" });
 
 		expect(mockSocket.emit).not.toHaveBeenCalledWith(
 			"error",
@@ -757,11 +765,11 @@ describe("callLine validation", () => {
 		expect(roomEmit).toHaveBeenCalledWith("lineToggled", { lineCalled: true });
 	});
 
-	it("emits error when player does not have a valid line", () => {
+	it("emits error when player does not have a valid line", async () => {
 		// Remove one drawn number so the line is incomplete
 		room.unmarkNumber(40);
 
-		trigger("callLine", { gameId: "test01" });
+		await trigger("callLine", { gameId: "test01" });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith(
 			"error",
@@ -833,9 +841,9 @@ describe("callBingo validation", () => {
 			},
 		};
 
-		trigger = (event: string, payload: any) => {
+		trigger = async (event: string, payload: any) => {
 			const h = handlers.get(event);
-			if (h) h(payload);
+			if (h) await h(payload);
 		};
 
 		roomEmit = vi.fn();
@@ -849,14 +857,15 @@ describe("callBingo validation", () => {
 		};
 
 		mockGameManager = {
-			getGame: vi.fn().mockReturnValue(room),
+			getGame: vi.fn().mockResolvedValue(room),
+		saveGame: vi.fn().mockResolvedValue(undefined),
 		};
 
 		registerHandlers(mockIo as any, mockGameManager as any);
 	});
 
-	it("emits bingoToggled and gameEnded when player has a valid bingo", () => {
-		trigger("callBingo", { gameId: "test01" });
+	it("emits bingoToggled and gameEnded when player has a valid bingo", async () => {
+		await trigger("callBingo", { gameId: "test01" });
 
 		expect(mockSocket.emit).not.toHaveBeenCalledWith(
 			"error",
@@ -871,11 +880,11 @@ describe("callBingo validation", () => {
 		});
 	});
 
-	it("emits error when player does not have a valid bingo", () => {
+	it("emits error when player does not have a valid bingo", async () => {
 		// Remove one drawn number so bingo is incomplete
 		room.unmarkNumber(51);
 
-		trigger("callBingo", { gameId: "test01" });
+		await trigger("callBingo", { gameId: "test01" });
 
 		expect(mockSocket.emit).toHaveBeenCalledWith(
 			"error",
