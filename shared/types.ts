@@ -6,29 +6,29 @@
 // Core Domain Types
 // -----------------------------------------------------------------------------
 
-export type GameStatus = 'waiting' | 'playing' | 'ended';
+export type GameStatus = "waiting" | "playing" | "ended";
 
 export interface GameState {
-  id: string;
-  status: GameStatus;
-  players: Player[];
-  dispensadorId: string | null;
-  drawnNumbers: number[];
-  lineCalled: boolean;
-  bingoCalled: boolean;
-  createdAt: number;
+	id: string;
+	status: GameStatus;
+	players: Player[];
+	dispensadorId: string | null;
+	drawnNumbers: number[];
+	lineCalled: boolean;
+	bingoCalled: boolean;
+	createdAt: number;
 }
 
 export interface Player {
-  id: string;
-  name: string;
-  cards: Card[];
-  isDispensador: boolean;
+	id: string;
+	name: string;
+	cards: Card[];
+	isDispensador: boolean;
 }
 
 export interface Card {
-  numbers: number[]; // 27 elements (9 cols × 3 rows), index = col*3 + row, 0 = blank cell
-  marked: boolean[];  // 27 booleans, one per cell, true = marked/tachado
+	numbers: number[]; // 27 elements (9 cols × 3 rows), index = col*3 + row, 0 = blank cell
+	marked: boolean[]; // 27 booleans, one per cell, true = marked/tachado
 }
 
 // -----------------------------------------------------------------------------
@@ -36,70 +36,70 @@ export interface Card {
 // -----------------------------------------------------------------------------
 
 export interface CreateGamePayload {
-  playerName: string;
+	playerName: string;
 }
 
 export interface JoinGamePayload {
-  gameId: string;
-  playerName: string;
-  cardCount: number;
+	gameId: string;
+	playerName: string;
+	cardCount: number;
 }
 
 export interface DrawNumberPayload {
-  gameId: string;
-  number: number;
+	gameId: string;
+	number: number;
 }
 
 export interface ToggleLinePayload {
-  gameId: string;
+	gameId: string;
 }
 
 export interface ToggleBingoPayload {
-  gameId: string;
-  winnerName?: string;
+	gameId: string;
+	winnerName?: string;
 }
 
 export interface UnmarkNumberPayload {
-  gameId: string;
-  number: number;
+	gameId: string;
+	number: number;
 }
 
 export interface NumberUnmarkedPayload {
-  number: number;
-  drawnNumbers: number[];
+	number: number;
+	drawnNumbers: number[];
 }
 
 export interface MarkCardPayload {
-  gameId: string;
-  cardIndex: number;
-  cellIndex: number;
+	gameId: string;
+	cardIndex: number;
+	cellIndex: number;
 }
 
 export interface UnmarkCardPayload {
-  gameId: string;
-  cardIndex: number;
-  cellIndex: number;
+	gameId: string;
+	cardIndex: number;
+	cellIndex: number;
 }
 
 export interface CallLinePayload {
-  gameId: string;
+	gameId: string;
 }
 
 export interface CallBingoPayload {
-  gameId: string;
+	gameId: string;
 }
 
 export interface ClientToServerEvents {
-  createGame: (payload: CreateGamePayload) => void;
-  joinGame: (payload: JoinGamePayload) => void;
-  drawNumber: (payload: DrawNumberPayload) => void;
-  unmarkNumber: (payload: UnmarkNumberPayload) => void;
-  toggleLine: (payload: ToggleLinePayload) => void;
-  toggleBingo: (payload: ToggleBingoPayload) => void;
-  markCard: (payload: MarkCardPayload) => void;
-  unmarkCard: (payload: UnmarkCardPayload) => void;
-  callLine: (payload: CallLinePayload) => void;
-  callBingo: (payload: CallBingoPayload) => void;
+	createGame: (payload: CreateGamePayload) => void;
+	joinGame: (payload: JoinGamePayload) => void;
+	drawNumber: (payload: DrawNumberPayload) => void;
+	unmarkNumber: (payload: UnmarkNumberPayload) => void;
+	toggleLine: (payload: ToggleLinePayload) => void;
+	toggleBingo: (payload: ToggleBingoPayload) => void;
+	markCard: (payload: MarkCardPayload) => void;
+	unmarkCard: (payload: UnmarkCardPayload) => void;
+	callLine: (payload: CallLinePayload) => void;
+	callBingo: (payload: CallBingoPayload) => void;
 }
 
 // -----------------------------------------------------------------------------
@@ -107,64 +107,64 @@ export interface ClientToServerEvents {
 // -----------------------------------------------------------------------------
 
 export interface GameCreatedPayload {
-  gameId: string;
+	gameId: string;
 }
 
 export interface GameJoinedPayload {
-  game: GameState;
-  playerId: string;
-  cards: Card[];
+	game: GameState;
+	playerId: string;
+	cards: Card[];
 }
 
 export interface PlayerJoinedPayload {
-  playerCount: number;
+	playerCount: number;
 }
 
 export interface NumberDrawnPayload {
-  number: number;
-  drawnNumbers: number[];
+	number: number;
+	drawnNumbers: number[];
 }
 
 export interface LineToggledPayload {
-  lineCalled: boolean;
+	lineCalled: boolean;
 }
 
 export interface BingoToggledPayload {
-  bingoCalled: boolean;
+	bingoCalled: boolean;
 }
 
 export interface CardMarkedPayload {
-  cardIndex: number;
-  cellIndex: number;
+	cardIndex: number;
+	cellIndex: number;
 }
 
 export interface CardUnmarkedPayload {
-  cardIndex: number;
-  cellIndex: number;
+	cardIndex: number;
+	cellIndex: number;
 }
 
 export interface GameEndedPayload {
-  winner: string;
-  reason: 'line' | 'bingo';
+	winner: string;
+	reason: "line" | "bingo";
 }
 
 export interface ErrorPayload {
-  code: string;
-  message: string;
+	code: string;
+	message: string;
 }
 
 export interface ServerToClientEvents {
-  gameCreated: (payload: GameCreatedPayload) => void;
-  gameJoined: (payload: GameJoinedPayload) => void;
-  playerJoined: (payload: PlayerJoinedPayload) => void;
-  numberDrawn: (payload: NumberDrawnPayload) => void;
-  numberUnmarked: (payload: NumberUnmarkedPayload) => void;
-  lineToggled: (payload: LineToggledPayload) => void;
-  bingoToggled: (payload: BingoToggledPayload) => void;
-  cardMarked: (payload: CardMarkedPayload) => void;
-  cardUnmarked: (payload: CardUnmarkedPayload) => void;
-  gameEnded: (payload: GameEndedPayload) => void;
-  error: (payload: ErrorPayload) => void;
+	gameCreated: (payload: GameCreatedPayload) => void;
+	gameJoined: (payload: GameJoinedPayload) => void;
+	playerJoined: (payload: PlayerJoinedPayload) => void;
+	numberDrawn: (payload: NumberDrawnPayload) => void;
+	numberUnmarked: (payload: NumberUnmarkedPayload) => void;
+	lineToggled: (payload: LineToggledPayload) => void;
+	bingoToggled: (payload: BingoToggledPayload) => void;
+	cardMarked: (payload: CardMarkedPayload) => void;
+	cardUnmarked: (payload: CardUnmarkedPayload) => void;
+	gameEnded: (payload: GameEndedPayload) => void;
+	error: (payload: ErrorPayload) => void;
 }
 
 // -----------------------------------------------------------------------------
@@ -172,24 +172,24 @@ export interface ServerToClientEvents {
 // -----------------------------------------------------------------------------
 
 export interface CreateGameRequest {
-  playerName: string;
+	playerName: string;
 }
 
 export interface CreateGameResponse {
-  gameId: string;
-  playerId: string;
-  playerName: string;
-  isDispensador: boolean;
+	gameId: string;
+	playerId: string;
+	playerName: string;
+	isDispensador: boolean;
 }
 
 export interface GameStateResponse {
-  id: string;
-  status: GameStatus;
-  playerCount: number;
-  drawnNumbers: number[];
-  lineCalled: boolean;
-  bingoCalled: boolean;
-  createdAt: number;
+	id: string;
+	status: GameStatus;
+	playerCount: number;
+	drawnNumbers: number[];
+	lineCalled: boolean;
+	bingoCalled: boolean;
+	createdAt: number;
 }
 
 // -----------------------------------------------------------------------------
@@ -197,12 +197,14 @@ export interface GameStateResponse {
 // -----------------------------------------------------------------------------
 
 export enum ErrorCode {
-  GAME_NOT_FOUND = 'PARTIDA_NO_ENCONTRADA',
-  GAME_FULL = 'PARTIDA_LLENA',
-  NOT_DISPENSADOR = 'NO_ERES_DISPENSADOR',
-  NUMBER_ALREADY_DRAWN = 'NUMERO_INVALIDO',
-  NUMBER_NOT_DRAWN = 'NUMERO_NO_MARCADO',
-  INVALID_NAME = 'NOMBRE_INVALIDO',
-  GAME_ENDED = 'PARTIDA_TERMINADA',
-  INVALID_CARD_COUNT = 'CANTIDAD_INVALIDA',
+	GAME_NOT_FOUND = "PARTIDA_NO_ENCONTRADA",
+	GAME_FULL = "PARTIDA_LLENA",
+	NOT_DISPENSADOR = "NO_ERES_DISPENSADOR",
+	NUMBER_ALREADY_DRAWN = "NUMERO_INVALIDO",
+	NUMBER_NOT_DRAWN = "NUMERO_NO_MARCADO",
+	INVALID_NAME = "NOMBRE_INVALIDO",
+	GAME_ENDED = "PARTIDA_TERMINADA",
+	INVALID_CARD_COUNT = "CANTIDAD_INVALIDA",
+	LINE_NOT_COMPLETE = "LINEA_INCOMPLETA",
+	BINGO_NOT_COMPLETE = "BINGO_INCOMPLETO",
 }
