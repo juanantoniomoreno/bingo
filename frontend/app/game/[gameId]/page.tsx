@@ -613,9 +613,14 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 				{/* Number display */}
 				{gameState && (
 					<div className="bg-wood-texture border border-wood-dark rounded-xl p-3 sm:p-4">
-						<p className="text-xs text-wood-dark/70 mb-2 uppercase tracking-wide font-medium">
-							Últimos números
-						</p>
+						<div className="flex items-center justify-between mb-2">
+							<p className="text-xs text-wood-dark/70 uppercase tracking-wide font-medium">
+								Últimos números
+							</p>
+							<span className="text-xs text-wood-dark/60 font-medium tabular-nums">
+								Bolas restantes: {90 - gameState.drawnNumbers.length}
+							</span>
+						</div>
 						<NumberDisplay drawnNumbers={gameState.drawnNumbers} />
 					</div>
 				)}

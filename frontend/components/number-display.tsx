@@ -33,13 +33,6 @@ export function NumberDisplay({ drawnNumbers }: NumberDisplayProps) {
 
   return (
     <div className="w-full">
-      {/* Counter */}
-      <div className="flex justify-end mb-1.5">
-        <span className="text-xs text-wood-dark/60 font-medium tabular-nums">
-          {drawnNumbers.length}/90
-        </span>
-      </div>
-
       {/* Balls */}
       <div
         ref={scrollRef}
