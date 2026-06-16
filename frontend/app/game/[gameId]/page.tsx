@@ -127,6 +127,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 		sessionStorage.removeItem("bingo_lineCalled");
 		sessionStorage.removeItem("bingo_bingoCalled");
 		sessionStorage.removeItem("bingo_status");
+		sessionStorage.removeItem("bingo_playerId");
 	}
 
 	// -------------------------------------------------------------------------
@@ -139,6 +140,10 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
 		const cleanupNumberDrawn = onEvent("numberDrawn", ({ drawnNumbers }) => {
 			setGameState((prev) => (prev ? { ...prev, drawnNumbers } : null));
+			sessionStorage.setItem(
+				"bingo_drawnNumbers",
+				JSON.stringify(drawnNumbers),
+			);
 		});
 		cleanups.push(cleanupNumberDrawn);
 
@@ -146,6 +151,10 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 			"numberUnmarked",
 			({ number, drawnNumbers }) => {
 				setGameState((prev) => (prev ? { ...prev, drawnNumbers } : null));
+				sessionStorage.setItem(
+					"bingo_drawnNumbers",
+					JSON.stringify(drawnNumbers),
+				);
 				setUnmarkToast(number);
 				const t = setTimeout(() => setUnmarkToast(null), 5000);
 				cleanups.push(() => clearTimeout(t));
@@ -155,11 +164,13 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
 		const cleanupLineToggled = onEvent("lineToggled", ({ lineCalled }) => {
 			setGameState((prev) => (prev ? { ...prev, lineCalled } : null));
+			sessionStorage.setItem("bingo_lineCalled", JSON.stringify(lineCalled));
 		});
 		cleanups.push(cleanupLineToggled);
 
 		const cleanupBingoToggled = onEvent("bingoToggled", ({ bingoCalled }) => {
 			setGameState((prev) => (prev ? { ...prev, bingoCalled } : null));
+			sessionStorage.setItem("bingo_bingoCalled", JSON.stringify(bingoCalled));
 		});
 		cleanups.push(cleanupBingoToggled);
 
@@ -167,6 +178,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 			"gameEnded",
 			(payload: GameEndedPayload) => {
 				setGameState((prev) => (prev ? { ...prev, status: "ended" } : null));
+				sessionStorage.setItem("bingo_status", "ended");
 				setGameEnd({ winner: payload.winner, reason: payload.reason });
 				setCurrentAlert(null);
 				setError("");
@@ -182,19 +194,59 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 		});
 		cleanups.push(cleanupError);
 
+		// Handle rejoin response from server
+		const cleanupGameRejoined = onEvent(
+			"gameRejoined",
+			({ game, cards: rejoinedCards }) => {
+				setGameState({
+					id: game.id,
+					status: game.status,
+					players: game.players,
+					dispensadorId: game.dispensadorId,
+					drawnNumbers: game.drawnNumbers,
+					lineCalled: game.lineCalled,
+					bingoCalled: game.bingoCalled,
+					createdAt: game.createdAt,
+				});
+				// Restore cards from local storage to preserve user's marks
+				const storedCards: Card[] = safeParse(
+					sessionStorage.getItem("bingo_cards"),
+					rejoinedCards,
+				);
+				setCards(storedCards);
+				// Persist server state to sessionStorage
+				sessionStorage.setItem(
+					"bingo_drawnNumbers",
+					JSON.stringify(game.drawnNumbers),
+				);
+				sessionStorage.setItem(
+					"bingo_lineCalled",
+					JSON.stringify(game.lineCalled),
+				);
+				sessionStorage.setItem(
+					"bingo_bingoCalled",
+					JSON.stringify(game.bingoCalled),
+				);
+				sessionStorage.setItem("bingo_status", game.status);
+			},
+		);
+		cleanups.push(cleanupGameRejoined);
+
 		const cleanupCardMarked = onEvent(
 			"cardMarked",
 			({ cardIndex, cellIndex }) => {
-				setCards((prev) =>
-					prev.map((card, i) => {
+				setCards((prev) => {
+					const next = prev.map((card, i) => {
 						if (i === cardIndex && !card.marked[cellIndex]) {
 							const newMarked = [...card.marked];
 							newMarked[cellIndex] = true;
 							return { ...card, marked: newMarked };
 						}
 						return card;
-					}),
-				);
+					});
+					sessionStorage.setItem("bingo_cards", JSON.stringify(next));
+					return next;
+				});
 			},
 		);
 		cleanups.push(cleanupCardMarked);
@@ -202,16 +254,18 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 		const cleanupCardUnmarked = onEvent(
 			"cardUnmarked",
 			({ cardIndex, cellIndex }) => {
-				setCards((prev) =>
-					prev.map((card, i) => {
+				setCards((prev) => {
+					const next = prev.map((card, i) => {
 						if (i === cardIndex && card.marked[cellIndex]) {
 							const newMarked = [...card.marked];
 							newMarked[cellIndex] = false;
 							return { ...card, marked: newMarked };
 						}
 						return card;
-					}),
-				);
+					});
+					sessionStorage.setItem("bingo_cards", JSON.stringify(next));
+					return next;
+				});
 			},
 		);
 		cleanups.push(cleanupCardUnmarked);
@@ -230,10 +284,17 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 			setReconnectedToast(true);
 			const t = setTimeout(() => setReconnectedToast(false), 3000);
 			lastConnectedRef.current = true;
+
+			// Auto-rejoin the game with our stored playerId
+			const storedPlayerId = sessionStorage.getItem("bingo_playerId");
+			if (role === "player" && gameId && storedPlayerId) {
+				emit("rejoinGame", { gameId, playerId: storedPlayerId });
+			}
+
 			return () => clearTimeout(t);
 		}
 		lastConnectedRef.current = connected;
-	}, [connected]);
+	}, [connected, gameId, role, emit]);
 
 	// On reconnect, check if game ended while we were disconnected (T6.4 fallback)
 	useEffect(() => {

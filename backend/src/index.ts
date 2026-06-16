@@ -43,8 +43,8 @@ redis.on('error', (err) => {
   console.error('❌ Redis connection error:', err);
 });
 
-// Game manager (in-memory registry)
-const gameManager = new GameManager();
+// Game manager (Redis-backed with in-memory cache)
+const gameManager = new GameManager(redis);
 
 // REST API routes
 app.use('/api', createGameRoutes(gameManager));

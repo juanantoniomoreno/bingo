@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bingo-redis
+    # Redis is only used internally by the backend; no host port needed
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: bingo-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      # Mount source for hot-reload during development
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+      # Also mount compiled dist so host builds are picked up by containers
+      - ./shared/dist:/app/shared/dist
+      # Protect node_modules from host overwrite
+      - /app/node_modules
+      - /app/backend/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: bingo-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+    depends_on:
+      - backend
+    volumes:
+      # Mount source for hot-reload during development
+      - ./frontend:/app/frontend
+      - ./shared:/app/shared
+      # Also mount compiled dist so host builds are picked up by containers
+      - ./shared/dist:/app/shared/dist
+      # Protect node_modules from host overwrite
+      - /app/node_modules
+      - /app/frontend/node_modules

@@ -1,5 +1,5 @@
-import { Router, Request, Response } from 'express';
-import { GameManager } from '../game/GameManager';
+import { Router, type Request, type Response } from 'express';
+import type { GameManager } from '../game/GameManager';
 import { ErrorCode } from 'shared';
 
 /**
@@ -34,9 +34,9 @@ export function createGameRoutes(gameManager: GameManager): Router {
   });
 
   // GET /api/game/:id — Get game state (polling fallback)
-  router.get('/game/:id', (req: Request, res: Response) => {
+  router.get('/game/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = gameManager.getGameStateResponse(id);
+    const result = await gameManager.getGameStateResponse(id);
 
     if (typeof result === 'string') {
       // It's an error code

@@ -1,0 +1,32 @@
+{
+  "files": {
+    "src/game/handlers.ts": {
+      "modifiedRanges": [
+        {
+          "start": 18,
+          "end": 18
+        },
+        {
+          "start": 82,
+          "end": 124
+        }
+      ],
+      "importsChanged": true,
+      "lastEdit": "2026-05-22T23:14:19.616Z"
+    },
+    "src/game/GameManager.ts": {
+      "modifiedRanges": [
+        {
+          "start": 1,
+          "end": 236
+        }
+      ],
+      "importsChanged": true,
+      "lastEdit": "2026-05-22T23:18:53.559Z"
+    }
+  },
+  "turnCycles": 0,
+  "maxCycles": 3,
+  "lastUpdated": "2026-05-22T23:18:53.559Z",
+  "sessionId": "lens-mphj52an-478fb9c8"
+}

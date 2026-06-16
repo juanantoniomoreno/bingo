@@ -1,0 +1,18 @@
+{
+  "files": {
+    "app/game/[gameId]/page.tsx": {
+      "modifiedRanges": [
+        {
+          "start": 1,
+          "end": 714
+        }
+      ],
+      "importsChanged": true,
+      "lastEdit": "2026-05-22T23:18:53.933Z"
+    }
+  },
+  "turnCycles": 0,
+  "maxCycles": 3,
+  "lastUpdated": "2026-05-22T23:18:53.933Z",
+  "sessionId": "lens-mphj52an-478fb9c8"
+}
