@@ -83,6 +83,7 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(true);
 	const [gameEnd, setGameEnd] = useState<GameEndState | null>(null);
+	const [playerCount, setPlayerCount] = useState(1);
 
 	// --- Reconnection state ---------------------------------------------------
 	const [reconnectedToast, setReconnectedToast] = useState(false);
@@ -193,6 +194,18 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 			cleanups.push(() => clearTimeout(t));
 		});
 		cleanups.push(cleanupError);
+
+		// Real-time player count
+		const cleanupPlayerJoined = onEvent("playerJoined", ({ playerCount }) => {
+			setPlayerCount(playerCount);
+		});
+		cleanups.push(cleanupPlayerJoined);
+
+		const cleanupPlayerLeft = onEvent("playerLeft", ({ playerCount }) => {
+			setPlayerCount(playerCount);
+		});
+		cleanups.push(cleanupPlayerLeft);
+		cleanups.push(cleanupPlayerLeft);
 
 		// Handle rejoin response from server
 		const cleanupGameRejoined = onEvent(
@@ -491,6 +504,10 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 
 	/** Game End: exit to landing, clear all state. */
 	const handleExit = () => {
+		// Notify server before leaving
+		if (gameId) {
+			emit("leaveGame", { gameId });
+		}
 		clearGameSession();
 		router.push("/");
 	};
@@ -566,7 +583,9 @@ export default function GamePage({ params }: { params: { gameId: string } }) {
 				</div>
 
 				{/* Game ID for dispensador */}
-				{role === "dispensador" && <GameIdDisplay gameId={gameId} />}
+				{role === "dispensador" && (
+					<GameIdDisplay gameId={gameId} playerCount={playerCount} />
+				)}
 
 				{/* Reconnected toast */}
 				{reconnectedToast && (
