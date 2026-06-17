@@ -73,6 +73,9 @@ export function registerHandlers(
 
 			socket.emit("gameCreated", { gameId: result.gameId });
 
+			// Broadcast initial player count (just the dispensador)
+			io.to(result.gameId).emit("playerJoined", { playerCount: 1 });
+
 			console.log(
 				`🎮 Game created: ${result.gameId} by ${result.playerName} (${result.playerId})`,
 			);
@@ -124,7 +127,7 @@ export function registerHandlers(
 		// ──────────────────────────────────────────────
 		// joinGame — Player joins an existing game
 		// ──────────────────────────────────────────────
-		socket.on("joinGame", (payload: JoinGamePayload) => {
+		socket.on("joinGame", async (payload: JoinGamePayload) => {
 			if (!isValidGameId(payload.gameId)) {
 				const error: ErrorPayload = {
 					code: ErrorCode.GAME_NOT_FOUND,
@@ -182,9 +185,10 @@ export function registerHandlers(
 				cards: result.player.cards,
 			});
 
-			// Broadcast player count to everyone in the room
+			// Broadcast player count to everyone in the room (real-time connected sockets)
+			const sockets = await io.in(payload.gameId).allSockets();
 			io.to(payload.gameId).emit("playerJoined", {
-				playerCount: result.game.getPlayerCount(),
+				playerCount: sockets.size,
 			});
 
 			console.log(
@@ -526,9 +530,68 @@ export function registerHandlers(
 		});
 
 		// ──────────────────────────────────────────────
+		// leaveGame — Player explicitly leaves the game (via UI button)
+		// ──────────────────────────────────────────────
+		socket.on("leaveGame", async () => {
+			const gameId = socket.data.gameId;
+			const playerId = socket.data.playerId;
+
+			if (!gameId || !playerId) return;
+
+			// Get player name before cleaning up
+			const room = await gameManager.getGame(gameId);
+			const player = room?.getPlayer(playerId);
+			const playerName = player?.name || "Jugador";
+
+			// Leave the socket room
+			socket.leave(gameId);
+
+			// Clear socket data
+			socket.data.gameId = undefined;
+			socket.data.playerId = undefined;
+
+			// Broadcast updated count to remaining players
+			const sockets = await io.in(gameId).allSockets();
+			io.to(gameId).emit("playerLeft", {
+				playerCount: sockets.size,
+				playerName,
+			});
+
+			console.log(
+				`🚪 Player ${playerName} (${playerId}) left game ${gameId} — ${sockets.size} connected`,
+			);
+		});
+
+		// ──────────────────────────────────────────────
 		// disconnect
 		// ──────────────────────────────────────────────
-		socket.on("disconnect", () => {
+		socket.on("disconnect", async () => {
+			const gameId = socket.data.gameId;
+			const playerId = socket.data.playerId;
+
+			if (gameId && playerId) {
+				try {
+					const sockets = await io.in(gameId).allSockets();
+					const playerCount = sockets.size;
+
+					// Get player name for the toast
+					const room = await gameManager.getGame(gameId);
+					const player = room?.getPlayer(playerId);
+					const playerName = player?.name || "Jugador";
+
+					io.to(gameId).emit("playerLeft", {
+						playerCount,
+						playerName,
+					});
+
+					console.log(
+						`👋 Player ${playerName} (${playerId}) left game ${gameId} — ${playerCount} connected`,
+					);
+				} catch {
+					// Silent fail — room may have been cleaned up
+				}
+			}
+
 			console.log(`🔌 Client disconnected: ${socket.id}`);
 		});
 	});

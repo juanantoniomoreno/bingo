@@ -94,6 +94,10 @@ export interface RejoinGamePayload {
 	playerId: string;
 }
 
+export interface LeaveGamePayload {
+	gameId: string;
+}
+
 export interface ClientToServerEvents {
 	createGame: (payload: CreateGamePayload) => void;
 	joinGame: (payload: JoinGamePayload) => void;
@@ -106,6 +110,7 @@ export interface ClientToServerEvents {
 	callLine: (payload: CallLinePayload) => void;
 	callBingo: (payload: CallBingoPayload) => void;
 	rejoinGame: (payload: RejoinGamePayload) => void;
+	leaveGame: (payload: LeaveGamePayload) => void;
 }
 
 // -----------------------------------------------------------------------------
@@ -124,6 +129,11 @@ export interface GameJoinedPayload {
 
 export interface PlayerJoinedPayload {
 	playerCount: number;
+}
+
+export interface PlayerLeftPayload {
+	playerCount: number;
+	playerName: string;
 }
 
 export interface NumberDrawnPayload {
@@ -170,6 +180,7 @@ export interface ServerToClientEvents {
 	gameJoined: (payload: GameJoinedPayload) => void;
 	gameRejoined: (payload: GameRejoinedPayload) => void;
 	playerJoined: (payload: PlayerJoinedPayload) => void;
+	playerLeft: (payload: PlayerLeftPayload) => void;
 	numberDrawn: (payload: NumberDrawnPayload) => void;
 	numberUnmarked: (payload: NumberUnmarkedPayload) => void;
 	lineToggled: (payload: LineToggledPayload) => void;

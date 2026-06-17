@@ -15,11 +15,11 @@ services:
       dockerfile: backend/Dockerfile
     container_name: bingo-backend
     ports:
-      - "3001:3001"
+      - "3002:3001"
     environment:
       - PORT=3001
       - REDIS_URL=redis://redis:6379
-      - CORS_ORIGIN=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3003
     depends_on:
       redis:
         condition: service_healthy
@@ -39,10 +39,10 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: bingo-frontend
     ports:
-      - "3000:3000"
+      - "3003:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
-      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3002
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
     depends_on:
       - backend
     volumes:
